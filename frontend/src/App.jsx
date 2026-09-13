@@ -1,121 +1,398 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useEffect, useState } from 'react'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [facilities, setFacilities] = useState([])
+  const [searchFacility, setSearchFacility] = useState('')
+  const [searchResult, setSearchResult] = useState([])
+
+  // Mengambil data fasilitas dari Laravel API
+  useEffect(() => {
+    fetch('http://127.0.0.1:8000/api/facilities')
+      .then((response) => response.json())
+      .then((data) => {
+        setFacilities(data)
+      })
+      .catch((error) => {
+        console.error('Error:', error)
+      })
+  }, [])
+
+  // Fungsi untuk mencari fasilitas
+  const handleCheck = () => {
+    const keyword = searchFacility.toLowerCase().trim()
+
+    if (keyword === '') {
+      setSearchResult([])
+      return
+    }
+
+    const result = facilities.filter((facility) =>
+      facility.name.toLowerCase().includes(keyword) ||
+      facility.type.toLowerCase().includes(keyword) ||
+      facility.location.toLowerCase().includes(keyword)
+    )
+
+    setSearchResult(result)
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="app">
+
+      {/* NAVBAR */}
+      <nav className="navbar">
+        <div className="logo">
+          <span>Chloe</span>
+          <small>Campus Venue & Facilities Online E-Booking</small>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+
+        <div className="nav-links">
+          <a href="#">Dashboard</a>
+          <a href="#">Booking</a>
+          <a href="#">Reports</a>
+          <button>Sign In</button>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
+      </nav>
+
+
+      {/* HERO */}
+      <section className="hero">
+
+        <div className="hero-overlay"></div>
+
+        <div className="hero-content">
+          <p className="welcome">Welcome to Chloe.</p>
+
+          <h1>
+            Looking for your
+            <br />
+            <span>Perfect</span> Venue?
+          </h1>
+
+          <div className="hero-buttons">
+            <button className="book-btn">
+              Book Now
+            </button>
+
+            <button className="learn-btn">
+              Learn more →
+            </button>
+          </div>
+        </div>
+
+
+        {/* AVAILABILITY CHECK */}
+        <div className="availability-card">
+
+          <h2>Availability Check</h2>
+
+          <div className="line"></div>
+
+          <label>Search Facility</label>
+
+          <input
+            type="text"
+            placeholder="⌕"
+            value={searchFacility}
+            onChange={(e) => setSearchFacility(e.target.value)}
+          />
+
+          <div className="hint">
+            Hint: Use Indonesian to search
+            <br />
+            keywords for venues or equipments
+          </div>
+
+          <label>Select Date</label>
+
+          <input type="date" />
+
+          <button
+            className="check-btn"
+            onClick={handleCheck}
+          >
+            Check
+          </button>
+
+          {/* HASIL PENCARIAN */}
+          {searchResult.length > 0 && (
+            <div className="search-results">
+
+              <h3>Available Facilities</h3>
+
+              {searchResult.map((facility) => (
+                <div
+                  className="result-item"
+                  key={facility.id}
+                >
+                  <strong>{facility.name}</strong>
+
+                  <span>
+                    {facility.location}
+                  </span>
+
+                  <span>
+                    Capacity: {facility.capacity}
+                  </span>
+                </div>
+              ))}
+
+            </div>
+          )}
+
+          {/* JIKA TIDAK DITEMUKAN */}
+          {searchFacility.trim() !== '' &&
+            searchResult.length === 0 && (
+              <p className="no-result">
+                Facility not found.
+              </p>
+            )}
+
+        </div>
+
       </section>
 
-      <div className="ticks"></div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+      {/* ANNOUNCEMENTS */}
+      <section className="section announcements">
+
+        <h2>Announcements</h2>
+
+        <div className="section-line"></div>
+
+        <div className="announcement-grid">
+
+          <div className="announcement-card">
+            <p>03/09/2026</p>
+
+            <h3>
+              Jadwal Pemeliharaan Aula
+            </h3>
+
+            <span>
+              Aula utama akan ditutup sementara
+              untuk pemeliharaan rutin.
+            </span>
+
+            <a href="#">
+              Read more ›
+            </a>
+          </div>
+
+
+          <div className="announcement-card">
+            <p>03/09/2026</p>
+
+            <h3>
+              Fitur Reservasi Baru
+            </h3>
+
+            <span>
+              Sekarang kamu bisa cek ketersediaan
+              fasilitas langsung dari halaman utama.
+            </span>
+
+            <a href="#">
+              Read more ›
+            </a>
+          </div>
+
+
+          <div className="announcement-card">
+            <p>03/09/2026</p>
+
+            <h3>
+              Jam Operasional Berubah
+            </h3>
+
+            <span>
+              Jam operasional gedung diperbarui
+              mulai bulan ini.
+            </span>
+
+            <a href="#">
+              Read more ›
+            </a>
+          </div>
+
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
+
       </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+
+      {/* HOW TO USE */}
+      <section className="section how-to">
+
+        <h2>How to Use</h2>
+
+        <div className="section-line"></div>
+
+        <div className="steps">
+
+          <div className="step-card">
+
+            <div className="number">
+              1
+            </div>
+
+            <h3>
+              Find your venue
+            </h3>
+
+            <p>
+              Search and select the
+              space you want to book
+            </p>
+
+          </div>
+
+
+          <div className="step-card">
+
+            <div className="number">
+              2
+            </div>
+
+            <h3>
+              Choose your date & time
+            </h3>
+
+            <p>
+              Pick your preferred
+              schedule for the reservation
+            </p>
+
+          </div>
+
+
+          <div className="step-card">
+
+            <div className="number">
+              3
+            </div>
+
+            <h3>
+              Confirm & Done
+            </h3>
+
+            <p>
+              Finalize your order
+            </p>
+
+          </div>
+
+        </div>
+
+      </section>
+
+
+      {/* FAQ */}
+      <section className="section faq">
+
+        <h2>
+          Frequently Asked Questions
+        </h2>
+
+        <div className="section-line"></div>
+
+        <div className="faq-list">
+
+          <details open>
+
+            <summary>
+              Bagaimana cara reservasi fasilitas?
+              <span>×</span>
+            </summary>
+
+            <div className="faq-answer">
+              Pilih fasilitas yang ingin digunakan,
+              tentukan tanggal dan waktu, kemudian
+              lakukan reservasi.
+            </div>
+
+          </details>
+
+
+          <details>
+
+            <summary>
+              Apakah reservasi bisa dibatalkan?
+              <span>□</span>
+            </summary>
+
+            <div className="faq-answer">
+              Ya, reservasi dapat dibatalkan sesuai
+              dengan ketentuan yang berlaku.
+            </div>
+
+          </details>
+
+
+          <details>
+
+            <summary>
+              Berapa lama proses persetujuan reservasi?
+              <span>□</span>
+            </summary>
+
+            <div className="faq-answer">
+              Reservasi akan diproses oleh petugas
+              setelah pengajuan dilakukan.
+            </div>
+
+          </details>
+
+        </div>
+
+      </section>
+
+
+      {/* FOOTER */}
+      <footer>
+
+        <div className="footer-content">
+
+          <div>
+
+            <h2>
+              About Chloe
+            </h2>
+
+            <p>
+              Chloe is the premier digital hub
+              for booking campus venues and facilities,
+              designed to make event planning seamless
+              for students and staff.
+            </p>
+
+          </div>
+
+
+          <div>
+
+            <h2>
+              Fast Links
+            </h2>
+
+            <a href="#">
+              Home
+            </a>
+
+            <a href="#">
+              Booking
+            </a>
+
+            <a href="#">
+              Reports
+            </a>
+
+          </div>
+
+        </div>
+
+      </footer>
+
+    </div>
   )
 }
 
