@@ -1,0 +1,66 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\StoreReservationRequest;
+use App\Models\Facility;
+use App\Models\Reservation;
+use Illuminate\Http\Request;
+
+class BookingController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Facility::where('status', 'active');
+
+        if ($request->filled('q')) {
+            $query->where('name', 'like', '%' . $request->q . '%');
+        }
+
+        $facilities = $query->paginate(9);
+
+        return view('booking.index', compact('facilities'));
+    }
+
+    public function show(Facility $facility, Request $request)
+    {
+        $date = $request->get('date', now()->toDateString());
+
+        $booked = Reservation::where('facility_id', $facility->id)
+            ->where('reservation_date', $date)
+            ->whereIn('status', ['pending', 'approved'])
+            ->get(['start_time', 'end_time']);
+
+        return view('booking.show', compact('facility', 'date', 'booked'));
+    }
+
+    public function store(StoreReservationRequest $request)
+    {
+        Reservation::create($request->validated() + [
+            'user_id' => auth()->id(),
+            'status'  => 'pending',
+        ]);
+
+        return redirect()->route('booking.history')
+            ->with('success', 'Reservasi berhasil diajukan, menunggu persetujuan petugas.');
+    }
+
+    public function history()
+    {
+        $reservations = Reservation::where('user_id', auth()->id())
+            ->latest()
+            ->paginate(10);
+
+        return view('booking.history', compact('reservations'));
+    }
+
+    public function cancel(Reservation $reservation)
+    {
+        abort_unless($reservation->user_id === auth()->id(), 403);
+        abort_if($reservation->status !== 'pending', 400, 'Reservasi yang sudah diproses tidak bisa dibatalkan sendiri.');
+
+        $reservation->update(['status' => 'cancelled']);
+
+        return back()->with('success', 'Reservasi dibatalkan.');
+    }
+}
