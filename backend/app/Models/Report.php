@@ -6,17 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Facility;
 
-class Reservation extends Model
+class Report extends Model
 {
     protected $fillable = [
         'user_id',
         'facility_id',
-        'start_time',
-        'end_time',
-        'purpose',
+        'category',
+        'description',
+        'photo',
         'status',
-        'cancellation_reason',
-        'processed_by',
+        'resolution_notes',
+        'handled_by',
     ];
 
     public function user()
@@ -29,8 +29,8 @@ class Reservation extends Model
         return $this->belongsTo(Facility::class);
     }
 
-    public function processedBy()
+    public function handledBy()
     {
-        return $this->belongsTo(User::class, 'processed_by');
+        return $this->belongsTo(User::class, 'handled_by');
     }
 }

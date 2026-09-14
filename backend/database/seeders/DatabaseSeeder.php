@@ -2,24 +2,25 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Facility;
 
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
-
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        Facility::updateOrCreate(
+            [
+                'name' => 'Ruang Seminar Gedung A'
+            ],
+            [
+                'type' => 'Ruang Seminar',
+                'location' => 'Gedung A Lantai 2',
+                'capacity' => 100,
+                'description' => 'Ruang seminar untuk kegiatan akademik dan organisasi.',
+                'status' => 'active',
+                'image' => null,
+            ]
+        );
     }
 }
