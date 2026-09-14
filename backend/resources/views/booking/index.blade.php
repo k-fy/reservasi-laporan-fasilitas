@@ -13,7 +13,7 @@
         <!-- Search & Filter -->
         <form method="GET" action="{{ route('booking.index') }}" class="flex flex-col md:flex-row gap-4 mb-10">
             
-            {{-- Input Search Text --}}
+            <!-- Input Search Text -->
             <div class="flex-1 relative">
                 <span class="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-400">
                     [S]
@@ -54,27 +54,46 @@
         </form>
         
 
-        {{-- Grid fasilitas --}}
+        {{-- Grid Fasilitas --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             @forelse($facilities as $facility)
-                <div class="bg-[#FCF1F0] rounded-2xl overflow-hidden flex flex-col">
-                    <img src="{{ $facility->image ? asset('storage/'.$facility->image) : 'https://placehold.co/500x300?text=No+Image' }}"
-                        class="w-full h-52 object-cover">
-                    <div class="p-5 flex flex-col flex-1">
-                        <h3 class="font-bold text-lg mb-2 text-neutral-800">{{ $facility->name }}</h3>
-                        <p class="text-sm text-neutral-600 mb-4 flex-1">{{ $facility->description }}</p>
-                        <div class="flex justify-between items-center text-sm text-neutral-700">
-                            <span>Capacity : {{ $facility->capacity }} pax</span>
-                            <a href="{{ route('booking.show', $facility) }}" class="font-semibold flex items-center gap-1 hover:underline">
+
+                <div class="bg-[#FCF1F0] rounded-3xl overflow-hidden flex flex-col p-4 shadow-sm border border-[#EDD3D6]/40 hover:shadow-md transition">
+                    
+                    <div class="w-full h-48 rounded-2xl overflow-hidden mb-4 relative">
+                        <img src="{{ $facility->image ? asset('storage/'.$facility->image) : 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80' }}"
+                            alt="{{ $facility->name }}"
+                            class="w-full h-full object-cover">
+                        
+                        @if($facility->status !== 'active')
+                            <span class="absolute top-3 right-3 bg-rose-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                                {{ $facility->status }}
+                            </span>
+                        @endif
+                    </div>
+
+                    <div class="flex flex-col flex-1 px-1">
+                        <h3 class="font-bold text-lg text-neutral-800 mb-1 leading-snug">
+                            {{ $facility->name }}
+                        </h3>
+                        
+                        <p class="text-xs text-neutral-600 mb-6 flex-1 leading-relaxed line-clamp-3">
+                            {{ $facility->description }}
+                        </p>
+
+                        <div class="flex justify-between items-center text-xs text-neutral-700 font-medium pt-3 border-t border-neutral-300/40">
+                            <span>Capacity : {{ $facility->capacity }} {{ $facility->type === 'alat' ? 'pcs' : 'pax' }}</span>
+                            <a href="{{ route('booking.show', $facility) }}" class="font-bold text-neutral-800 flex items-center gap-1 hover:underline">
                                 Details <span>›</span>
                             </a>
                         </div>
                     </div>
+
                 </div>
+
             @empty
-                <div class="col-span-3 text-center text-[#F3D9DC] py-20">
-                    <p class="text-lg">Belum ada fasilitas yang ditambahkan.</p>
-                    <p class="text-sm text-neutral-400 mt-2">Admin bisa tambahkan data fasilitas lewat panel admin.</p>
+                <div class="col-span-1 md:col-span-3 text-center py-20">
+                    <p class="text-lg font-medium text-[#F3D9DC]">Belum ada fasilitas yang ditambahkan.</p>
                 </div>
             @endforelse
         </div>
