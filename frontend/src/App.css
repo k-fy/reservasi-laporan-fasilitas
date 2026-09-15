@@ -23,6 +23,8 @@ a {
 
 /* ================= NAVBAR ================= */
 
+/* ================= NAVBAR ================= */
+
 .navbar {
   height: 68px;
   background: #d9b6be;
@@ -35,19 +37,43 @@ a {
   padding: 0 28px;
 }
 
-.logo {
+/* Container utama untuk Logo dan Teks agar sejajar horizontal */
+.logo-container {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 12px; /* Jarak antara gambar logo dan teks */
 }
 
-.logo span {
+/* Styling untuk gambar logo */
+.logo-img {
+  height: 40px; /* Tinggi logo disesuaikan agar pas di navbar */
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* Kelompok pembungkus teks judul & subjudul */
+/* Kelompok pembungkus teks judul & subjudul */
+.logo-text-group {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1; 
+  text-align: left; /* <-- Tambahkan baris ini */
+}
+
+.logo-text-group span {
   font-family: Georgia, serif;
   font-size: 22px;
   font-style: italic;
+  font-weight: bold;
+  color: #4b4848;
 }
 
-.logo small {
-  font-size: 7px;
+.logo-text-group small {
+  font-size: 9px; /* Sedikit diperbesar agar terbaca jelas di samping logo */
+  color: #555;
+  white-space: nowrap; /* Mencegah teks terpotong ke bawah */
+  margin-top: 2px;
 }
 
 .nav-links {
@@ -63,9 +89,8 @@ a {
   border: none;
   border-radius: 20px;
   padding: 8px 25px;
+  cursor: pointer;
 }
-
-
 /* ================= HERO ================= */
 
 .hero {
@@ -98,24 +123,38 @@ a {
 
 .hero-content {
   margin-top: -50px;
+  text-align: left ;
+}
+
+
+
+.hero-content h1 {
+  font-family: 'Poppins', sans-serif;
+  text-align: left;
+  color: #FFF5F5;
+  font-weight: 700; 
+  line-height: 1.2;
+  font-size: 48px; 
+}
+
+.hero-content h1 span {
+  font-family: 'Poppins', sans-serif ;
+  font-weight: 700 ;
+  font-style: italic !important; 
+  color: #F7D6D0 ;
 }
 
 .welcome {
   font-family: Georgia, serif;
   font-style: italic;
-  font-size: 21px;
+  font-size: 25px;
   margin-bottom: 12px;
+  color: #F7D6D0;
+  text-align: left;
 }
 
-.hero h1 {
-  font-size: 48px;
-  line-height: 1.15;
-}
 
-.hero h1 span {
-  color: #e9cbd0;
-  font-style: italic;
-}
+
 
 .hero-buttons {
   display: flex;
@@ -130,16 +169,27 @@ a {
   padding: 13px 40px;
   border-radius: 30px;
   font-size: 16px;
-  font-weight: bold;
+  
+
+  font-family: 'Poppins', sans-serif ;
+  font-weight: 600 ; 
+  color: #4A4A4A ;   
+  cursor: pointer;
 }
 
 .learn-btn {
   background: transparent;
   border: none;
-  color: white;
   font-size: 15px;
+  
+  font-family: 'Poppins', sans-serif ;
+  font-weight: 400;             
+  color: #FFF5F5 ;    
+  cursor: pointer;
 }
 
+
+/* ================= AVAILABILITY ================= */
 
 /* ================= AVAILABILITY ================= */
 
@@ -153,10 +203,34 @@ a {
   padding: 25px;
 
   box-shadow: 0 0 8px rgba(255, 220, 220, 0.8);
+  
+  text-align: left; 
+  font-family: 'Poppins', sans-serif;
+}
+
+.line {
+  height: 2px;
+  background: #F7D6D0;
+  margin: 12px 0;
+  border-radius: 5px; /* <-- Tambahkan baris ini agar ujung garisnya tumpul */
+}
+
+/* Memastikan label, input, placeholder, dan teks di dalamnya menggunakan Poppins dan tetap berwarna #FFF5F5 */
+.availability-card label,
+.availability-card .hint,
+.availability-card input,
+.availability-card input::placeholder {
+  color: #FFF5F5 !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.availability-card input {
+  border-color: #FFF5F5;
 }
 
 .availability-card h2 {
-  font-size: 20px;
+  font-weight: 700 !important; /* Bold */
+  color: #FFF5F5 !important;
 }
 
 .line {
@@ -167,7 +241,7 @@ a {
 
 .availability-card label {
   display: block;
-  font-size: 11px;
+  font-size: 13px;
   margin: 10px 0 5px;
 }
 
@@ -175,7 +249,7 @@ a {
   width: 100%;
   height: 38px;
 
-  border: 1px solid white;
+  border: 2px solid white;
   border-radius: 12px;
 
   background: transparent;
@@ -184,19 +258,30 @@ a {
   padding: 8px;
 }
 
+
+
+/* ================= AVAILABILITY ================= */
+
+/* ... kode availability card lainnya ... */
+
 .hint {
   background: #b9aaaa;
   color: white;
 
   border-radius: 10px;
 
-  font-size: 10px;
+  font-size: 13px;
   padding: 10px;
 
   margin: 8px 0;
+  
+  /* Tambahkan baris di bawah ini */
+  font-family: 'Poppins', sans-serif; 
+  font-weight: 600;
 }
 
-.check-btn {
+/* Pastikan selector ini spesifik berada di dalam availability-card */
+.availability-card .check-btn {
   width: 100%;
   margin-top: 12px;
 
@@ -207,9 +292,45 @@ a {
   padding: 10px;
 
   font-size: 16px;
-  font-weight: bold;
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 900 !important; /* Memaksa agar teks Check jadi tebal (bold) */
+  color: #4b4848 !important;
+  cursor: pointer;
 }
 
+/* Container untuk menyejajarkan Start Time & End Time secara berdampingan */
+.time-row {
+  display: flex;
+  gap: 12px; /* Jarak antar kolom Start Time dan End Time */
+  margin-top: 5px;
+}
+
+/* Setiap kolom waktu */
+.time-group {
+  flex: 1; /* Membagi rata lebar kedua kolom */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Menyesuaikan label dan input waktu agar serasi dengan card */
+.time-group label {
+  display: block;
+  font-size: 13px;
+  margin: 10px 0 5px;
+  color: #FFF5F5 !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.time-group input {
+  width: 100%;
+  height: 38px;
+  border: 2px solid #FFF5F5;
+  border-radius: 12px;
+  background: transparent;
+  color: #FFF5F5 !important;
+  padding: 8px;
+  font-family: 'Poppins', sans-serif !important;
+}
 
 /* ================= GENERAL SECTION ================= */
 
@@ -219,11 +340,10 @@ a {
 
 .section h2 {
   text-align: center;
-
-  font-family: Georgia, serif;
-  font-style: italic;
-
-  font-size: 25px;
+  font-family: 'Radley', Georgia, serif ; 
+  font-style: italic ;
+  font-size: 28px;
+  color: #FFF5F5; 
 }
 
 .section-line {
@@ -235,6 +355,17 @@ a {
   margin: 10px auto 20px;
 }
 
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  /* Membuat gradasi dari gelap transparan di atas, lalu berubah solid menjadi #4A4A4A di bagian bawah */
+  background: linear-gradient(
+    to bottom,
+    rgba(35, 35, 35, 0.4) 0%,   /* Agak transparan di bagian atas */
+    rgba(35, 35, 35, 0.75) 60%, /* Menengah */
+    #4A4A4A 100%                 /* Berubah sepenuhnya menjadi warna #4A4A4A di bagian paling bawah */
+  );
+}
 
 /* ================= ANNOUNCEMENTS ================= */
 
@@ -253,39 +384,42 @@ a {
 .announcement-card {
   background: #fff7f7;
   color: #4b4848;
-
   border-radius: 10px;
-
   padding: 18px;
-
   min-height: 115px;
-
   text-align: center;
+  
+
+  font-family: 'Poppins', sans-serif;
 }
 
 .announcement-card p {
   font-size: 11px;
   margin-bottom: 7px;
+  font-family: 'Poppins', sans-serif ;
+  font-weight: 600 ;
 }
 
 .announcement-card h3 {
   font-size: 13px;
   margin-bottom: 8px;
+  font-family: 'Poppins', sans-serif ;
+  font-weight: 600;
 }
 
 .announcement-card span {
   display: block;
   font-size: 9px;
+  font-family: 'Poppins', sans-serif ;
 }
 
 .announcement-card a {
   display: block;
   text-align: right;
-
   font-size: 9px;
   font-style: italic;
-
   margin-top: 10px;
+  font-family: 'Poppins', sans-serif ;
 }
 
 
@@ -300,39 +434,53 @@ a {
 .step-card {
   background: #f0d3cf;
   color: #4b4848;
-
   border-radius: 10px;
-
   min-height: 145px;
-
   padding: 15px;
-
   text-align: center;
-}
-
-.number {
-  width: 22px;
-  height: 22px;
-
-  margin: 0 auto 15px;
-
-  background: white;
-  border-radius: 50%;
-
-  font-size: 11px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  
+  font-family: 'Poppins', sans-serif ;
 }
 
 .step-card h3 {
   font-size: 12px;
   margin-bottom: 10px;
+  font-family: 'Poppins', sans-serif ;
+  font-weight: 600;
 }
 
 .step-card p {
   font-size: 10px;
+  font-family: 'Poppins', sans-serif ;
+}
+
+.number {
+  width: 22px;
+  height: 22px;
+  margin: 0 auto 15px;
+  background: white;
+  border-radius: 50%;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  font-family: 'Poppins', sans-serif ;
+  font-weight: 700;
+}
+
+.announcement-card span {
+  display: block;
+  font-size: 9px;
+  font-family: 'Poppins', sans-serif ;
+  line-height: 1.2 ; 
+  margin-top: 4px;
+}
+
+.step-card p {
+  font-size: 10px;
+  font-family: 'Poppins', sans-serif ;
+  line-height: 1.2 ; 
 }
 
 
@@ -340,14 +488,16 @@ a {
 
 .faq {
   background: linear-gradient(
-    #555252,
-    #fdf5f5
+    to bottom,
+    #4d4b4b 0%,    
+    #FFF5F5 100%   
   );
   min-height: 420px;
 }
-
 .faq h2 {
   color: white;
+  font-family: 'Radley', Georgia, serif ;
+  font-style: italic;
 }
 
 .faq-list {
@@ -361,60 +511,81 @@ details {
 
 summary {
   list-style: none;
-
   background: #4d4b4b;
   color: white;
-
   padding: 10px 15px;
-
   font-size: 11px;
-
   display: flex;
   justify-content: space-between;
-
   cursor: pointer;
+  
+  font-family: 'Poppins', sans-serif ; 
 }
 
 .faq-answer {
   min-height: 120px;
   background: white;
-
   border: 1px solid #555;
-
   padding: 20px;
-
   font-size: 12px;
+  
+  font-family: 'Poppins', sans-serif ; 
 }
-
 
 /* ================= FOOTER ================= */
 
 footer {
   background: #d9b6be;
-
-  padding: 55px 7%;
+  padding: 50px 8%;
+  font-family: 'Poppins', sans-serif ; 
 }
 
 .footer-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
+  display: flex;
+  flex-direction: column; 
+  gap: 25px;
+  font-family: 'Poppins', sans-serif ;
 }
 
-.footer-content h2 {
-  font-size: 20px;
-  margin-bottom: 10px;
+.footer-about h2,
+.footer-links h2 {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #4b4848;
+  font-family: 'Poppins', sans-serif ;
 }
 
-.footer-content p {
-  max-width: 500px;
-  line-height: 1.5;
+.footer-about p {
+  font-size: 15px; 
+  max-width: 600px;
+  line-height: 1.6; 
+  color: #4b4848;
+  font-family: 'Poppins', sans-serif ;
+  text-align: justify ;
 }
 
-.footer-content a {
+.footer-links a {
   display: block;
   margin: 5px 0;
+  font-size: 13px;
   text-decoration: underline;
+  color: #4b4848;
+  font-family: 'Poppins', sans-serif ;
+}
+
+.footer-line {
+  width: 100%;
+  height: 1.5px;
+  background: #4b4848;
+  margin: 10px 0;
+}
+
+.footer-copyright {
+  text-align: center;
+  font-size: 11px;
+  color: #4b4848;
+  font-family: 'Poppins', sans-serif;
 }
 
 
@@ -447,4 +618,14 @@ footer {
   .footer-content {
     grid-template-columns: 1fr;
   }
+}
+
+/* Memaksa kata Perfect agar menjadi miring dengan tingkat prioritas tertinggi */
+h1 span.italic-perfect,
+.hero-content h1 span,
+.hero h1 span {
+  font-family: 'Poppins', sans-serif !important;
+  font-style: italic !important;
+  font-weight: 700 !important;
+  color: #F7D6D0 !important;
 }
