@@ -11,3 +11,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/booking-history', [BookingController::class, 'history'])->name('booking.history');
     Route::delete('/booking/{reservation}', [BookingController::class, 'cancel'])->name('booking.cancel');
 });
+
+use App\Http\Controllers\ReportController;
+
+Route::middleware('auth')->group(function () {
+    Route::get('/reports/create', [ReportController::class, 'create'])->name('reports.create');
+    Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+});
