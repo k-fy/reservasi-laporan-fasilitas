@@ -4,9 +4,18 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\FacilityController;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+    Route::get('/roles', [AdminController::class, 'roles'])->name('roles');
+    Route::get('/facilities', [AdminController::class, 'facilities'])->name('facilities');
+    Route::get('/summary', [AdminController::class, 'summary'])->name('summary');
 });
 
 Route::get('/dashboard', function () {
