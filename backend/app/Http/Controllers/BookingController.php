@@ -14,14 +14,21 @@ class BookingController extends Controller
         $query = Facility::where('status', 'active');
 
         if ($request->filled('q')) {
-            $query->where('name', 'like', '%' . $request->q . '%');
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->q . '%')
+                ->orWhere('description', 'like', '%' . $request->q . '%');
+            });
         }
 
-        $facilities = $query->paginate(9);
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        $facilities = $query->paginate(9)->withQueryString();
 
         return view('booking.index', compact('facilities'));
     }
-
+    
     public function show(Facility $facility, Request $request)
     {
         $date = $request->get('date', now()->toDateString());
