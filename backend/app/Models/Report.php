@@ -19,6 +19,10 @@ class Report extends Model
         'handled_by',
     ];
 
+    protected $attributes = [
+    'status' => 'baru',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class);
