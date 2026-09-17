@@ -13,16 +13,21 @@ Route::get('/', [DashboardController::class, 'index'])->name('home');
 // Home / Dashboard publik — pengunjung & pengguna sama-sama bisa lihat
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+// Dashboard khusus role — wajib login + role sesuai
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard/petugas', [DashboardController::class, 'petugas'])
+        ->middleware('role:petugas')->name('dashboard.petugas');
+
+    Route::get('/dashboard/admin', [DashboardController::class, 'admin'])
+        ->middleware('role:admin')->name('dashboard.admin');
+});
+
+// Halaman kelola milik admin
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
     Route::get('/roles', [AdminController::class, 'roles'])->name('roles');
     Route::get('/facilities', [AdminController::class, 'facilities'])->name('facilities');
     Route::get('/summary', [AdminController::class, 'summary'])->name('summary');
 });
-
-Route::get('/dashboard', function () {
-    return view('dashboard.index');
-})->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

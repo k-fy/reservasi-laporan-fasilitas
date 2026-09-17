@@ -40,10 +40,8 @@
             <!-- Search Facility -->
             <label class="block text-[13px] text-[#FFF5F5] mt-2 mb-1">Search Facility</label>
             <div class="relative w-full">
-                <!-- Atribut placeholder dihapus -->
                 <input type="text" name="q" value="{{ request('q') }}"
                        class="w-full h-[38px] border-2 border-white rounded-xl bg-transparent text-[#FFF5F5] placeholder-[#FFF5F5] pl-3 pr-8 text-sm">
-                
                 <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[#FFF5F5] text-lg pointer-events-none">
                     ⌕
                 </span>
@@ -55,7 +53,6 @@
 
             <!-- Select Date -->
             <label class="block text-[13px] text-[#FFF5F5] mt-2 mb-1">Select Date</label>
-            <!-- Ditambahkan font-['Poppins',sans-serif] -->
             <input type="date" name="date"
                    onclick="this.showPicker()"
                    class="w-full h-[38px] border-2 border-white rounded-xl bg-transparent text-[#FFF5F5] px-2 text-sm cursor-pointer font-['Poppins',sans-serif]">
@@ -73,7 +70,6 @@
                 <!-- Start Time -->
                 <div class="flex-1 flex flex-col">
                     <label class="text-[13px] text-[#FFF5F5] mt-2 mb-1">Start Time</label>
-                    <!-- Ditambahkan font-['Poppins',sans-serif] dan teks diperkecil (text-sm) agar rapi -->
                     <select name="start_time" id="start_time" required
                             class="w-full h-[38px] border-2 border-[#FFF5F5] rounded-xl bg-[#4b4848] text-[#FFF5F5] px-2 text-sm font-['Poppins',sans-serif]">
                         <option value="" disabled selected></option>
@@ -86,11 +82,10 @@
                         @endforeach
                     </select>
                 </div>
-                
+
                 <!-- End Time -->
                 <div class="flex-1 flex flex-col">
                     <label class="text-[13px] text-[#FFF5F5] mt-2 mb-1">End Time</label>
-                    <!-- Ditambahkan font-['Poppins',sans-serif] dan teks diperkecil (text-sm) agar rapi -->
                     <select name="end_time" id="end_time" required
                             class="w-full h-[38px] border-2 border-[#FFF5F5] rounded-xl bg-[#4b4848] text-[#FFF5F5] px-2 text-sm font-['Poppins',sans-serif]">
                         <option value="" disabled selected></option>
@@ -104,7 +99,7 @@
                     </select>
                 </div>
             </div>
-            
+
             <button type="submit"
                     class="w-full mt-3 border-none rounded-[15px] bg-[#f3d8d5] py-2.5 text-base font-['Poppins',sans-serif] font-black text-[#4b4848] cursor-pointer">
                 Check
@@ -117,21 +112,18 @@
 <section class="bg-[#4d4b4b] text-white px-[5%] py-[60px]">
     <h2 class="text-center font-['Radley',Georgia,serif] italic text-[28px] text-[#FFF5F5]">Announcements</h2>
     <div class="w-[90%] h-[2px] bg-white mx-auto my-2.5 mb-5"></div>
-    
-    <!-- items-start agar kartu tidak saling tarik tinggi saat dibuka -->
+
     <div class="grid grid-cols-3 gap-5 items-start">
-        
+
         <!-- Kartu 1: Jadwal Pemeliharaan Aula -->
         <div class="bg-[#fff7f7] text-[#4b4848] rounded-[10px] p-[18px] text-center font-['Poppins',sans-serif] flex flex-col justify-between">
             <div>
                 <p class="text-[11px] mb-1.5 font-semibold">03/09/2026</p>
                 <h3 class="text-[13px] mb-2 font-semibold">Jadwal Pemeliharaan Aula</h3>
-                <!-- min-h menyamakan ruang teks agar tinggi kartu seragam saat tertutup -->
                 <div class="min-h-[32px] flex items-center justify-center">
                     <span class="text-[9px] leading-tight">Aula utama akan ditutup sementara untuk pemeliharaan rutin.</span>
                 </div>
             </div>
-            
             <details class="group mt-3 text-left">
                 <summary class="list-none text-right text-[9px] italic text-[#4b4848] cursor-pointer font-semibold select-none">
                     <span class="group-open:hidden">Read more ›</span>
@@ -152,7 +144,6 @@
                     <span class="text-[9px] leading-tight">Sekarang kamu bisa cek ketersediaan fasilitas langsung dari halaman utama.</span>
                 </div>
             </div>
-            
             <details class="group mt-3 text-left">
                 <summary class="list-none text-right text-[9px] italic text-[#4b4848] cursor-pointer font-semibold select-none">
                     <span class="group-open:hidden">Read more ›</span>
@@ -173,7 +164,6 @@
                     <span class="text-[9px] leading-tight">Jam operasional gedung diperbarui mulai bulan ini.</span>
                 </div>
             </div>
-            
             <details class="group mt-3 text-left">
                 <summary class="list-none text-right text-[9px] italic text-[#4b4848] cursor-pointer font-semibold select-none">
                     <span class="group-open:hidden">Read more ›</span>
@@ -187,7 +177,8 @@
 
     </div>
 </section>
-<!-- HOW TO USE --> 
+
+<!-- HOW TO USE -->
 <section class="bg-[#4d4b4b] text-white px-[5%] py-[60px]">
     <h2 class="text-center font-['Radley',Georgia,serif] italic text-[28px] text-[#FFF5F5]">How to Use</h2>
     <div class="w-[90%] h-[2px] bg-white mx-auto my-2.5 mb-5"></div>
@@ -211,18 +202,15 @@
 </section>
 
 <!-- FAQ -->
-
-<<!-- FAQ -->
 <section id="faq" class="px-[5%] py-[60px] min-h-[420px]" style="background: linear-gradient(to bottom, #4d4b4b 0%, #FFF5F5 100%);">
     <h2 class="text-center font-['Radley',Georgia,serif] italic text-[28px] text-white">Frequently Asked Questions</h2>
     <div class="w-[90%] h-[2px] bg-white mx-auto my-2.5 mb-5"></div>
     <div class="w-[85%] mx-auto">
-        
+
         <!-- FAQ Item 1 -->
         <details class="group mb-[18px]">
             <summary class="list-none bg-[#4d4b4b] text-white px-4 py-2.5 text-[11px] flex justify-between items-center cursor-pointer font-['Poppins',sans-serif]">
-                Bagaimana cara reservasi fasilitas? 
-                <!-- Panah ke bawah muncul saat tertutup, silang (×) muncul saat terbuka -->
+                Bagaimana cara reservasi fasilitas?
                 <span class="text-sm font-bold group-open:hidden">▼</span>
                 <span class="text-base font-bold hidden group-open:inline">×</span>
             </summary>
@@ -234,7 +222,7 @@
         <!-- FAQ Item 2 -->
         <details class="group mb-[18px]">
             <summary class="list-none bg-[#4d4b4b] text-white px-4 py-2.5 text-[11px] flex justify-between items-center cursor-pointer font-['Poppins',sans-serif]">
-                Apakah reservasi bisa dibatalkan? 
+                Apakah reservasi bisa dibatalkan?
                 <span class="text-sm font-bold group-open:hidden">▼</span>
                 <span class="text-base font-bold hidden group-open:inline">×</span>
             </summary>
@@ -246,7 +234,7 @@
         <!-- FAQ Item 3 -->
         <details class="group mb-[18px]">
             <summary class="list-none bg-[#4d4b4b] text-white px-4 py-2.5 text-[11px] flex justify-between items-center cursor-pointer font-['Poppins',sans-serif]">
-                Berapa lama proses persetujuan reservasi? 
+                Berapa lama proses persetujuan reservasi?
                 <span class="text-sm font-bold group-open:hidden">▼</span>
                 <span class="text-base font-bold hidden group-open:inline">×</span>
             </summary>
@@ -266,21 +254,17 @@
         const startVal = this.value;
         if (!startVal) return;
 
-        // Loop semua pilihan di End Time
         Array.from(endSelect.options).forEach(option => {
-            if (option.value === "") return; // Abaikan placeholder
-            
-            // Matikan (disable) opsi End Time yang kurang dari atau sama dengan Start Time
+            if (option.value === "") return;
             if (option.value <= startVal) {
                 option.disabled = true;
-                option.style.color = 'gray'; // Beri indikator visual opsi dimatikan
+                option.style.color = 'gray';
             } else {
                 option.disabled = false;
                 option.style.color = 'white';
             }
         });
 
-        // Jika nilai End Time yang sedang dipilih tidak valid, otomatis pilih jam terdekat
         if (endSelect.value && endSelect.value <= startVal) {
             const firstAvailable = Array.from(endSelect.options).find(opt => !opt.disabled && opt.value !== "");
             if (firstAvailable) {
@@ -291,7 +275,6 @@
         }
     });
 
-    // Panggil event satu kali saat halaman dimuat
     if (startSelect.value) {
         startSelect.dispatchEvent(new Event('change'));
     }
