@@ -1,15 +1,17 @@
 <?php
 
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\FacilityController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [DashboardController::class, 'index'])->name('home');
+
+// Home / Dashboard publik — pengunjung & pengguna sama-sama bisa lihat
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
