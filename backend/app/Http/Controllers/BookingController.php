@@ -11,12 +11,36 @@ class BookingController extends Controller
 {
     public function index(Request $request)
     {
+        // Validasi input pencarian jika user mengisi form Availability Check di Dashboard
+        if ($request->filled('start_time') || $request->filled('end_time')) {
+            $request->validate([
+                'start_time' => [
+                    'nullable', 
+                    'date_format:H:i', 
+                    'after_or_equal:07:00', 
+                    'before:20:00',
+                    'regex:/^([0-1][0-9]|20):(00|30)$/' // Wajib kelipatan 30 menit (00 atau 30)
+                ],
+                'end_time' => [
+                    'nullable', 
+                    'date_format:H:i', 
+                    'after:start_time', 
+                    'before_or_equal:20:00',
+                    'regex:/^([0-1][0-9]|20):(00|30)$/' // Wajib kelipatan 30 menit (00 atau 30)
+                ],
+            ], [
+                'end_time.after' => 'Waktu selesai harus lebih besar dari waktu mulai.',
+                'start_time.regex' => 'Waktu pencarian mulai harus kelipatan 30 menit (contoh: 07:00).',
+                'end_time.regex' => 'Waktu pencarian selesai harus kelipatan 30 menit.',
+            ]);
+        }
+
         $query = Facility::where('status', 'active');
 
         if ($request->filled('q')) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->q . '%')
-                ->orWhere('description', 'like', '%' . $request->q . '%');
+                  ->orWhere('description', 'like', '%' . $request->q . '%');
             });
         }
 

@@ -66,7 +66,7 @@
         <div class="pt-2 pb-3 space-y-2 font-semibold">
             <a href="{{ route('dashboard') }}" class="block px-3 py-2 text-neutral-800">Dashboard</a>
             <a href="{{ route('booking.index') }}" class="block px-3 py-2 text-neutral-800">Booking</a>
-            <a href="#" class="block px-3 py-2 text-neutral-800">Reports</a>
+            <a href="{{ route('reports.create') }}" class="block px-3 py-2 text-neutral-800">Reports</a>
         </div>
 
         <div class="pt-4 pb-1 border-t border-[#D8B4B8]">

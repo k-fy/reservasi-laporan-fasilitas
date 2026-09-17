@@ -25,9 +25,9 @@
                     Book Now
                 </button>
             </a>
-            <button class="bg-transparent border-none text-[15px] font-['Poppins',sans-serif] text-[#FFF5F5] cursor-pointer">
+            <a href="#faq" class="bg-transparent border-none text-[15px] font-['Poppins',sans-serif] text-[#FFF5F5] cursor-pointer no-underline">
                 Learn more →
-            </button>
+            </a>
         </div>
     </div>
 
@@ -37,28 +37,66 @@
         <div class="h-[2px] bg-[#F7D6D0] my-3 rounded"></div>
 
         <form method="GET" action="{{ route('booking.index') }}">
+            <!-- Search Facility -->
             <label class="block text-[13px] text-[#FFF5F5] mt-2 mb-1">Search Facility</label>
-            <input type="text" name="q" placeholder="⌕" value="{{ request('q') }}"
-                   class="w-full h-[38px] border-2 border-white rounded-xl bg-transparent text-[#FFF5F5] placeholder-[#FFF5F5] px-2 text-sm">
+            <div class="relative w-full">
+                <input type="text" name="q" value="{{ request('q') }}"
+                       class="w-full h-[38px] border-2 border-white rounded-xl bg-transparent text-[#FFF5F5] placeholder-[#FFF5F5] pl-3 pr-8 text-sm">
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[#FFF5F5] text-lg pointer-events-none">
+                    ⌕
+                </span>
+            </div>
 
             <div class="bg-[#b9aaaa] text-white rounded-[10px] text-[13px] p-2.5 my-2 font-semibold">
                 Hint: Use Indonesian to search<br>keywords for venues or equipments
             </div>
 
+            <!-- Select Date -->
             <label class="block text-[13px] text-[#FFF5F5] mt-2 mb-1">Select Date</label>
             <input type="date" name="date"
-                   class="w-full h-[38px] border-2 border-white rounded-xl bg-transparent text-[#FFF5F5] px-2 text-sm">
+                   onclick="this.showPicker()"
+                   class="w-full h-[38px] border-2 border-white rounded-xl bg-transparent text-[#FFF5F5] px-2 text-sm cursor-pointer font-['Poppins',sans-serif]">
+
+            @php
+                $timeOptions = [];
+                for ($i = 7; $i <= 19; $i++) {
+                    $timeOptions[] = sprintf('%02d:00', $i);
+                    $timeOptions[] = sprintf('%02d:30', $i);
+                }
+                $timeOptions[] = '20:00';
+            @endphp
 
             <div class="flex gap-3 mt-1">
+                <!-- Start Time -->
                 <div class="flex-1 flex flex-col">
                     <label class="text-[13px] text-[#FFF5F5] mt-2 mb-1">Start Time</label>
-                    <input type="time" name="start_time"
-                           class="w-full h-[38px] border-2 border-[#FFF5F5] rounded-xl bg-transparent text-[#FFF5F5] px-2">
+                    <select name="start_time" id="start_time" required
+                            class="w-full h-[38px] border-2 border-[#FFF5F5] rounded-xl bg-[#4b4848] text-[#FFF5F5] px-2 text-sm font-['Poppins',sans-serif]">
+                        <option value="" disabled selected></option>
+                        @foreach($timeOptions as $time)
+                            @if($time !== '20:00')
+                                <option value="{{ $time }}" {{ request('start_time') == $time ? 'selected' : '' }}>
+                                    {{ $time }}
+                                </option>
+                            @endif
+                        @endforeach
+                    </select>
                 </div>
+
+                <!-- End Time -->
                 <div class="flex-1 flex flex-col">
                     <label class="text-[13px] text-[#FFF5F5] mt-2 mb-1">End Time</label>
-                    <input type="time" name="end_time"
-                           class="w-full h-[38px] border-2 border-[#FFF5F5] rounded-xl bg-transparent text-[#FFF5F5] px-2">
+                    <select name="end_time" id="end_time" required
+                            class="w-full h-[38px] border-2 border-[#FFF5F5] rounded-xl bg-[#4b4848] text-[#FFF5F5] px-2 text-sm font-['Poppins',sans-serif]">
+                        <option value="" disabled selected></option>
+                        @foreach($timeOptions as $time)
+                            @if($time !== '07:00')
+                                <option value="{{ $time }}" {{ request('end_time') == $time ? 'selected' : '' }}>
+                                    {{ $time }}
+                                </option>
+                            @endif
+                        @endforeach
+                    </select>
                 </div>
             </div>
 
@@ -74,29 +112,73 @@
 <section class="bg-[#4d4b4b] text-white px-[5%] py-[60px]">
     <h2 class="text-center font-['Radley',Georgia,serif] italic text-[28px] text-[#FFF5F5]">Announcements</h2>
     <div class="w-[90%] h-[2px] bg-white mx-auto my-2.5 mb-5"></div>
-    <div class="grid grid-cols-3 gap-5">
-        <div class="bg-[#fff7f7] text-[#4b4848] rounded-[10px] p-[18px] min-h-[115px] text-center font-['Poppins',sans-serif]">
-            <p class="text-[11px] mb-1.5 font-semibold">03/09/2026</p>
-            <h3 class="text-[13px] mb-2 font-semibold">Jadwal Pemeliharaan Aula</h3>
-            <span class="block text-[9px] leading-tight mt-1">Aula utama akan ditutup sementara untuk pemeliharaan rutin.</span>
-            <a href="#" class="block text-right text-[9px] italic mt-2">Read more ›</a>
+
+    <div class="grid grid-cols-3 gap-5 items-start">
+
+        <!-- Kartu 1: Jadwal Pemeliharaan Aula -->
+        <div class="bg-[#fff7f7] text-[#4b4848] rounded-[10px] p-[18px] text-center font-['Poppins',sans-serif] flex flex-col justify-between">
+            <div>
+                <p class="text-[11px] mb-1.5 font-semibold">03/09/2026</p>
+                <h3 class="text-[13px] mb-2 font-semibold">Jadwal Pemeliharaan Aula</h3>
+                <div class="min-h-[32px] flex items-center justify-center">
+                    <span class="text-[9px] leading-tight">Aula utama akan ditutup sementara untuk pemeliharaan rutin.</span>
+                </div>
+            </div>
+            <details class="group mt-3 text-left">
+                <summary class="list-none text-right text-[9px] italic text-[#4b4848] cursor-pointer font-semibold select-none">
+                    <span class="group-open:hidden">Read more ›</span>
+                    <span class="hidden group-open:inline">Tutup ‹</span>
+                </summary>
+                <div class="mt-2 pt-2 border-t border-gray-300 text-[10px] leading-relaxed text-gray-600 text-justify">
+                    Pemeliharaan rutin aula utama akan dilaksanakan mulai pukul 08:00 WIB hingga selesai. Hal ini dilakukan untuk memastikan fasilitas pendingin ruangan, kelistrikan, dan sistem audio dalam kondisi optimal demi kenyamanan bersama. Mohon maaf atas ketidaknyamanannya.
+                </div>
+            </details>
         </div>
-        <div class="bg-[#fff7f7] text-[#4b4848] rounded-[10px] p-[18px] min-h-[115px] text-center font-['Poppins',sans-serif]">
-            <p class="text-[11px] mb-1.5 font-semibold">03/09/2026</p>
-            <h3 class="text-[13px] mb-2 font-semibold">Fitur Reservasi Baru</h3>
-            <span class="block text-[9px] leading-tight mt-1">Sekarang kamu bisa cek ketersediaan fasilitas langsung dari halaman utama.</span>
-            <a href="#" class="block text-right text-[9px] italic mt-2">Read more ›</a>
+
+        <!-- Kartu 2: Fitur Reservasi Baru -->
+        <div class="bg-[#fff7f7] text-[#4b4848] rounded-[10px] p-[18px] text-center font-['Poppins',sans-serif] flex flex-col justify-between">
+            <div>
+                <p class="text-[11px] mb-1.5 font-semibold">03/09/2026</p>
+                <h3 class="text-[13px] mb-2 font-semibold">Fitur Reservasi Baru</h3>
+                <div class="min-h-[32px] flex items-center justify-center">
+                    <span class="text-[9px] leading-tight">Sekarang kamu bisa cek ketersediaan fasilitas langsung dari halaman utama.</span>
+                </div>
+            </div>
+            <details class="group mt-3 text-left">
+                <summary class="list-none text-right text-[9px] italic text-[#4b4848] cursor-pointer font-semibold select-none">
+                    <span class="group-open:hidden">Read more ›</span>
+                    <span class="hidden group-open:inline">Tutup ‹</span>
+                </summary>
+                <div class="mt-2 pt-2 border-t border-gray-300 text-[10px] leading-relaxed text-gray-600 text-justify">
+                    Kini pengunjung dapat langsung memeriksa ketersediaan ruangan atau peralatan secara real-time melalui kotak "Availability Check" di halaman utama tanpa harus repot masuk atau daftar akun terlebih dahulu. Proses pengecekan menjadi jauh lebih cepat dan praktis!
+                </div>
+            </details>
         </div>
-        <div class="bg-[#fff7f7] text-[#4b4848] rounded-[10px] p-[18px] min-h-[115px] text-center font-['Poppins',sans-serif]">
-            <p class="text-[11px] mb-1.5 font-semibold">03/09/2026</p>
-            <h3 class="text-[13px] mb-2 font-semibold">Jam Operasional Berubah</h3>
-            <span class="block text-[9px] leading-tight mt-1">Jam operasional gedung diperbarui mulai bulan ini.</span>
-            <a href="#" class="block text-right text-[9px] italic mt-2">Read more ›</a>
+
+        <!-- Kartu 3: Jam Operasional Berubah -->
+        <div class="bg-[#fff7f7] text-[#4b4848] rounded-[10px] p-[18px] text-center font-['Poppins',sans-serif] flex flex-col justify-between">
+            <div>
+                <p class="text-[11px] mb-1.5 font-semibold">03/09/2026</p>
+                <h3 class="text-[13px] mb-2 font-semibold">Jam Operasional Berubah</h3>
+                <div class="min-h-[32px] flex items-center justify-center">
+                    <span class="text-[9px] leading-tight">Jam operasional gedung diperbarui mulai bulan ini.</span>
+                </div>
+            </div>
+            <details class="group mt-3 text-left">
+                <summary class="list-none text-right text-[9px] italic text-[#4b4848] cursor-pointer font-semibold select-none">
+                    <span class="group-open:hidden">Read more ›</span>
+                    <span class="hidden group-open:inline">Tutup ‹</span>
+                </summary>
+                <div class="mt-2 pt-2 border-t border-gray-300 text-[10px] leading-relaxed text-gray-600 text-justify">
+                    Menyesuaikan dengan jadwal kegiatan kampus terbaru, jam operasional layanan peminjaman fasilitas dan gedung kini dibuka setiap hari Senin hingga Sabtu mulai pukul 07:00 WIB dan ditutup pada pukul 20:00 WIB. Hari Minggu dan tanggal merah layanan libur.
+                </div>
+            </details>
         </div>
+
     </div>
 </section>
 
-<!-- HOW TO USE --> 
+<!-- HOW TO USE -->
 <section class="bg-[#4d4b4b] text-white px-[5%] py-[60px]">
     <h2 class="text-center font-['Radley',Georgia,serif] italic text-[28px] text-[#FFF5F5]">How to Use</h2>
     <div class="w-[90%] h-[2px] bg-white mx-auto my-2.5 mb-5"></div>
@@ -120,35 +202,82 @@
 </section>
 
 <!-- FAQ -->
-<section class="px-[5%] py-[60px] min-h-[420px]" style="background: linear-gradient(to bottom, #4d4b4b 0%, #FFF5F5 100%);">
+<section id="faq" class="px-[5%] py-[60px] min-h-[420px]" style="background: linear-gradient(to bottom, #4d4b4b 0%, #FFF5F5 100%);">
     <h2 class="text-center font-['Radley',Georgia,serif] italic text-[28px] text-white">Frequently Asked Questions</h2>
     <div class="w-[90%] h-[2px] bg-white mx-auto my-2.5 mb-5"></div>
     <div class="w-[85%] mx-auto">
-        <details class="mb-[18px]" open>
-            <summary class="list-none bg-[#4d4b4b] text-white px-4 py-2.5 text-[11px] flex justify-between cursor-pointer font-['Poppins',sans-serif]">
-                Bagaimana cara reservasi fasilitas? <span>×</span>
+
+        <!-- FAQ Item 1 -->
+        <details class="group mb-[18px]">
+            <summary class="list-none bg-[#4d4b4b] text-white px-4 py-2.5 text-[11px] flex justify-between items-center cursor-pointer font-['Poppins',sans-serif]">
+                Bagaimana cara reservasi fasilitas?
+                <span class="text-sm font-bold group-open:hidden">▼</span>
+                <span class="text-base font-bold hidden group-open:inline">×</span>
             </summary>
             <div class="min-h-[120px] bg-white border border-[#555] p-5 text-[12px] font-['Poppins',sans-serif]">
                 Pilih fasilitas yang ingin digunakan, tentukan tanggal dan waktu, kemudian lakukan reservasi.
             </div>
         </details>
-        <details class="mb-[18px]">
-            <summary class="list-none bg-[#4d4b4b] text-white px-4 py-2.5 text-[11px] flex justify-between cursor-pointer font-['Poppins',sans-serif]">
-                Apakah reservasi bisa dibatalkan? <span>□</span>
+
+        <!-- FAQ Item 2 -->
+        <details class="group mb-[18px]">
+            <summary class="list-none bg-[#4d4b4b] text-white px-4 py-2.5 text-[11px] flex justify-between items-center cursor-pointer font-['Poppins',sans-serif]">
+                Apakah reservasi bisa dibatalkan?
+                <span class="text-sm font-bold group-open:hidden">▼</span>
+                <span class="text-base font-bold hidden group-open:inline">×</span>
             </summary>
             <div class="min-h-[120px] bg-white border border-[#555] p-5 text-[12px] font-['Poppins',sans-serif]">
                 Ya, reservasi dapat dibatalkan sesuai dengan ketentuan yang berlaku.
             </div>
         </details>
-        <details class="mb-[18px]">
-            <summary class="list-none bg-[#4d4b4b] text-white px-4 py-2.5 text-[11px] flex justify-between cursor-pointer font-['Poppins',sans-serif]">
-                Berapa lama proses persetujuan reservasi? <span>□</span>
+
+        <!-- FAQ Item 3 -->
+        <details class="group mb-[18px]">
+            <summary class="list-none bg-[#4d4b4b] text-white px-4 py-2.5 text-[11px] flex justify-between items-center cursor-pointer font-['Poppins',sans-serif]">
+                Berapa lama proses persetujuan reservasi?
+                <span class="text-sm font-bold group-open:hidden">▼</span>
+                <span class="text-base font-bold hidden group-open:inline">×</span>
             </summary>
             <div class="min-h-[120px] bg-white border border-[#555] p-5 text-[12px] font-['Poppins',sans-serif]">
                 Reservasi akan diproses oleh petugas setelah pengajuan dilakukan.
             </div>
         </details>
+
     </div>
 </section>
+
+<script>
+    const startSelect = document.getElementById('start_time');
+    const endSelect = document.getElementById('end_time');
+
+    startSelect.addEventListener('change', function() {
+        const startVal = this.value;
+        if (!startVal) return;
+
+        Array.from(endSelect.options).forEach(option => {
+            if (option.value === "") return;
+            if (option.value <= startVal) {
+                option.disabled = true;
+                option.style.color = 'gray';
+            } else {
+                option.disabled = false;
+                option.style.color = 'white';
+            }
+        });
+
+        if (endSelect.value && endSelect.value <= startVal) {
+            const firstAvailable = Array.from(endSelect.options).find(opt => !opt.disabled && opt.value !== "");
+            if (firstAvailable) {
+                endSelect.value = firstAvailable.value;
+            } else {
+                endSelect.value = "";
+            }
+        }
+    });
+
+    if (startSelect.value) {
+        startSelect.dispatchEvent(new Event('change'));
+    }
+</script>
 
 @endsection
