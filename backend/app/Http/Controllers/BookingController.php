@@ -38,7 +38,16 @@ class BookingController extends Controller
             ->whereIn('status', ['pending', 'approved'])
             ->get(['start_time', 'end_time']);
 
-        return view('booking.show', compact('facility', 'date', 'booked'));
+        $amenitiesList = $facility->amenities 
+            ? array_map('trim', explode(',', $facility->amenities)) 
+            : [];
+
+        return view('booking.venue-details', [
+            'venue'         => $facility,
+            'facility'      => $facility,
+            'amenitiesList' => $amenitiesList,
+            'bookedSlots'   => $booked,
+        ]);
     }
 
     public function store(StoreReservationRequest $request)
@@ -69,5 +78,17 @@ class BookingController extends Controller
         $reservation->update(['status' => 'cancelled']);
 
         return back()->with('success', 'Reservasi dibatalkan.');
+    }
+
+    public function getBookedSlots(Facility $facility, Request $request)
+    {
+        $date = $request->get('date', now()->toDateString());
+
+        $bookedSlots = Reservation::where('facility_id', $facility->id)
+            ->where('reservation_date', $date)
+            ->whereIn('status', ['pending', 'approved'])
+            ->get(['start_time', 'end_time']);
+
+        return response()->json($bookedSlots);
     }
 }

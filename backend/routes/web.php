@@ -22,7 +22,8 @@ Route::prefix('booking')->name('booking.')->group(function () {
     Route::get('/', [BookingController::class, 'index'])->name('index');
     Route::get('/history', [BookingController::class, 'history'])->name('history');
     Route::get('/{facility}', [BookingController::class, 'show'])->name('show');
-    
+    Route::get('/booking/{facility}/slots', [BookingController::class, 'getBookedSlots'])->name('booking.slots');
+
     Route::middleware('auth')->group(function () {
         Route::post('/', [BookingController::class, 'store'])->name('store');
         Route::post('/{reservation}/cancel', [BookingController::class, 'cancel'])->name('cancel');
