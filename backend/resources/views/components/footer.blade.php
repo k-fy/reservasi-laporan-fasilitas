@@ -14,13 +14,13 @@
                 <h3 class="text-3xl font-serif italic font mb-3 text-neutral-800">Fast Links</h3>
                 <ul class="space-y-1 text-sm font-medium">
                     <li>
-                        <a href="/" class="hover:underline text-neutral-800">Home</a>
+                        <a href="{{ route('dashboard') }}" class="hover:underline text-neutral-800">Home</a>
                     </li>
                     <li>
                         <a href="{{ route('booking.index') }}" class="hover:underline text-neutral-800">Booking</a>
                     </li>
                     <li>
-                        <a href="#" class="hover:underline text-neutral-800">Reports</a>
+                        <a href="{{ route('reports.create') }}" class="hover:underline text-neutral-800">Reports</a>
                     </li>
                 </ul>
             </div>

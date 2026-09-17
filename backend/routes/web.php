@@ -10,7 +10,7 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return view('dashboard.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -31,7 +31,7 @@ Route::prefix('booking')->name('booking.')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/reports/create', [ReportController::class, 'create'])->name('reports.create');
+    Route::get('/reports', [ReportController::class, 'create'])->name('reports.create');
     Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
 });
 
