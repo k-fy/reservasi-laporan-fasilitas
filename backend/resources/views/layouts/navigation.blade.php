@@ -11,7 +11,7 @@
             <div class="hidden sm:flex sm:items-center sm:space-x-8 font-semibold text-neutral-800">
                 <a href="{{ route('dashboard') }}" class="hover:text-neutral-600 transition">Dashboard</a>
                 <a href="{{ route('booking.index') }}" class="hover:text-neutral-600 transition">Booking</a>
-                <a href="#" class="hover:text-neutral-600 transition">Reports</a>
+                <a href="{{ route('reports.create') }}" class="hover:text-neutral-600 transition">Reports</a>
 
                 @auth
                     <!-- Profile Dropdown (Saat Sudah Login) -->
