@@ -1,30 +1,37 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ config('app.name', 'Chloe') }}</title>
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+    <!-- Fonts & Styles (Vite) -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="antialiased">
+    <div class="min-h-screen w-full bg-cover bg-center relative flex items-center justify-center p-6"
+         style="background-image: url('{{ asset('images/campus.png') }}');">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <!-- Lapisan gelap tipis di atas foto biar teks terbaca -->
+        <div class="absolute inset-0 bg-chloe-700/40"></div>
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
-    <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
-            <div>
-                <a href="/">
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
-                </a>
-            </div>
+        <!-- Isi utama: dua kolom -->
+        <div class="relative z-10 w-full max-w-5xl grid md:grid-cols-2 gap-8 items-center">
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
+            <!-- Kolom kiri: kartu form -->
+            <div class="bg-chloe-100/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 sm:p-10">
                 {{ $slot }}
             </div>
+
+            <!-- Kolom kanan: teks sambutan -->
+            <div class="text-white text-center md:text-left px-2">
+                <h1 class="font-serif italic text-4xl sm:text-5xl mb-3">Welcome to Chloe.</h1>
+                <p class="font-serif italic text-lg sm:text-xl leading-relaxed opacity-90">
+                    CHLOE (Campus Hall &amp;<br>Location Online E-booking)
+                </p>
+            </div>
+
         </div>
-    </body>
+    </div>
+</body>
 </html>
