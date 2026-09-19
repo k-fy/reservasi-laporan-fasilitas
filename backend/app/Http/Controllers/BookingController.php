@@ -6,6 +6,7 @@ use App\Http\Requests\StoreReservationRequest;
 use App\Models\Facility;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
 {
@@ -78,11 +79,25 @@ class BookingController extends Controller
     {
         Reservation::create($request->validated() + [
             'user_id' => auth()->id(),
+            'facility_id'      => $request->facility_id,
+            'reservation_date' => $request->reservation_date,
+            'start_time'       => $request->start_time,
+            'end_time'         => $request->end_time,
+            'purpose'          => $request->purpose,
             'status'  => 'pending',
         ]);
 
-        return redirect()->route('booking.history')
-            ->with('success', 'Reservasi berhasil diajukan, menunggu persetujuan petugas.');
+        return redirect()->route('booking.reserve', [
+            'facility' => $request->facility_id,
+        ])->with('submitted', true)
+        ->with('date', $request->reservation_date)
+        ->with('start_time', $request->start_time)
+        ->with('end_time', $request->end_time);
+    }
+
+    public function success()
+    {
+        return view('booking.success');
     }
 
     public function history()
@@ -97,11 +112,11 @@ class BookingController extends Controller
     public function cancel(Reservation $reservation)
     {
         abort_unless($reservation->user_id === auth()->id(), 403);
-        abort_if($reservation->status !== 'pending', 400, 'Reservasi yang sudah diproses tidak bisa dibatalkan sendiri.');
+        abort_if($reservation->status !== 'pending', 400, 'Accepted reservation cannot be cancelled.');
 
         $reservation->update(['status' => 'cancelled']);
 
-        return back()->with('success', 'Reservasi dibatalkan.');
+        return back()->with('success', 'Reservation cancelled.');
     }
 
     public function getBookedSlots(Facility $facility, Request $request)
@@ -114,5 +129,16 @@ class BookingController extends Controller
             ->get(['start_time', 'end_time']);
 
         return response()->json($bookedSlots);
+    }
+
+    public function reserve(Facility $facility, Request $request)
+    {
+        abort_if(!Auth::check(), 403, 'You must be logged in to make a reservation.');
+
+        $date       = $request->get('date', now()->toDateString());
+        $start_time = $request->get('start_time');
+        $end_time   = $request->get('end_time');
+
+        return view('booking.reserve', compact('facility', 'date', 'start_time', 'end_time'));
     }
 }
