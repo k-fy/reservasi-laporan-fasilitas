@@ -1,7 +1,8 @@
 {{-- resources/views/reports/reports-page.blade.php --}}
 <x-app-layout>
     <div class="min-h-screen flex items-center justify-center bg-neutral-700 py-10">
-        <div class="w-full max-w-xl bg-rose-50 rounded-3xl shadow-xl p-8">
+        <div class="w-full max-w-xl bg-rose-50 rounded-3xl shadow-xl p-8"
+             x-data="{ category: '{{ old('category', '') }}' }">
 
             <h1 class="text-center text-4xl font-serif italic text-neutral-700 mb-2">
                 Report Form
@@ -32,31 +33,71 @@
                     </span>
                 </div>
 
-                {{-- Location --}}
+                {{-- Category --}}
                 <div class="mb-5">
-                    <label for="facility_id" class="block font-semibold text-neutral-700 mb-1">
+                    <label for="category" class="block font-semibold text-neutral-700 mb-1">
+                        Category<span class="text-rose-400">*</span>
+                    </label>
+                    <select name="category" id="category" x-model="category" required
+                        class="w-full rounded-xl border border-neutral-400 bg-rose-50 px-4 py-2.5
+                               text-neutral-700 focus:outline-none focus:ring-2 focus:ring-rose-300">
+                        <option value="" disabled>Pilih kategori</option>
+                        <option value="lokasi">Lokasi</option>
+                        <option value="peralatan">Peralatan</option>
+                    </select>
+                    @error('category')
+                        <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Location (muncul kalau category = lokasi) --}}
+                <div class="mb-5" x-show="category === 'lokasi'" x-cloak>
+                    <label for="facility_location" class="block font-semibold text-neutral-700 mb-1">
                         Location<span class="text-rose-400">*</span>
                     </label>
-                    <select name="facility_id" id="facility_id" required
+                    <select name="facility_id" id="facility_location"
+                        :disabled="category !== 'lokasi'"
+                        :required="category === 'lokasi'"
                         class="w-full rounded-xl border border-neutral-400 bg-rose-50 px-4 py-2.5
                                text-neutral-700 focus:outline-none focus:ring-2 focus:ring-rose-300">
                         <option value="" disabled selected>Pilih lokasi</option>
-                        @foreach ($facilities as $facility)
+                        @foreach ($locations as $facility)
                             <option value="{{ $facility->id }}"
                                 {{ old('facility_id') == $facility->id ? 'selected' : '' }}>
                                 {{ $facility->name }}
                             </option>
                         @endforeach
                     </select>
-                    @error('facility_id')
-                        <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
-                    @enderror
                 </div>
 
-                {{-- Feedback --}}
+                {{-- Equipment (muncul kalau category = peralatan) --}}
+                <div class="mb-5" x-show="category === 'peralatan'" x-cloak>
+                    <label for="facility_equipment" class="block font-semibold text-neutral-700 mb-1">
+                        Equipment<span class="text-rose-400">*</span>
+                    </label>
+                    <select name="facility_id" id="facility_equipment"
+                        :disabled="category !== 'peralatan'"
+                        :required="category === 'peralatan'"
+                        class="w-full rounded-xl border border-neutral-400 bg-rose-50 px-4 py-2.5
+                               text-neutral-700 focus:outline-none focus:ring-2 focus:ring-rose-300">
+                        <option value="" disabled selected>Pilih peralatan</option>
+                        @foreach ($equipments as $facility)
+                            <option value="{{ $facility->id }}"
+                                {{ old('facility_id') == $facility->id ? 'selected' : '' }}>
+                                {{ $facility->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                @error('facility_id')
+                    <p class="text-sm text-red-500 -mt-4 mb-4">{{ $message }}</p>
+                @enderror
+
+                {{-- Description --}}
                 <div class="mb-1">
                     <label for="description" class="block font-semibold text-neutral-700 mb-1">
-                        Feedback<span class="text-rose-400">*</span>
+                        Description<span class="text-rose-400">*</span>
                     </label>
                     <textarea name="description" id="description" rows="6" required
                         x-on:input="updateCount($event.target.value)"
