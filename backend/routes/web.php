@@ -24,6 +24,9 @@ Route::middleware('auth')->group(function () {
 
 // Halaman kelola milik admin
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+
+    Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard'); 
+
     Route::get('/roles', [AdminController::class, 'roles'])->name('roles');
     Route::get('/facilities', [AdminController::class, 'facilities'])->name('facilities');
     Route::get('/summary', [AdminController::class, 'summary'])->name('summary');

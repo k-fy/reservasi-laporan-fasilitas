@@ -5,100 +5,148 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Master Data Facility - Admin Chloe</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@1,600&display=swap" rel="stylesheet">
 </head>
 <body class="bg-[#5c4f50] font-['Poppins',sans-serif] m-0 p-0 text-white min-h-screen flex flex-col">
 
-    <!-- Top Header -->
-    <header class="flex justify-between items-center px-8 py-4 border-b border-[#726364]">
-        <div class="flex items-center space-x-3">
-            <div class="text-2xl font-serif italic font-bold tracking-wider text-[#ffdcdc]">Chloe</div>
-            <span class="text-xs text-[#d1c2c2] tracking-wide">Campus Hall & Location Online E-booking</span>
-        </div>
-        <div class="flex items-center space-x-3 text-sm">
-            <span class="text-[#d1c2c2]">Logged in as <strong class="underline italic text-white">Admin-01</strong></span>
-            <div class="w-9 h-9 rounded-full bg-[#a86b6b] flex items-center justify-center font-bold text-white shadow">
-                A
-            </div>
-        </div>
-    </header>
+    @include('admin.components.header')
 
     <div class="flex flex-1">
-        <!-- Sidebar -->
-        <aside class="w-64 bg-[#e2b8bc] text-[#4b3839] flex flex-col py-8 space-y-2 shadow-md">
-            <a href="{{ route('admin.dashboard') }}" class="px-8 py-3 hover:bg-[#ebd3d6] transition">Dashboard</a>
-            <a href="{{ route('admin.roles') }}" class="px-8 py-3 hover:bg-[#ebd3d6] transition">Modify Roles</a>
-            <a href="{{ route('admin.facilities') }}" class="px-8 py-3 font-semibold bg-[#f4d1d5] border-l-4 border-[#4b3839]">Master Data</a>
-            <a href="{{ route('admin.summary') }}" class="px-8 py-3 hover:bg-[#ebd3d6] transition">Summary</a>
+        <!-- Sidebar Navigation (Tidak diubah) -->
+        <aside class="w-64 bg-[#e2b8bc] text-[#4b3839] flex flex-col p-0 m-0 space-y-0 shadow-md">
+            <a href="{{ route('admin.dashboard') }}" class="px-6 py-4 hover:bg-[#ebd3d6] font-semibold transition text-center text-base">Dashboard</a>
+            <a href="{{ route('admin.roles') }}" class="px-6 py-4 hover:bg-[#ebd3d6] font-semibold transition text-center text-base">Modify Roles</a>
+            <a href="{{ route('admin.facilities') }}" class="px-6 py-4 font-bold bg-[#5c4f50] text-white rounded-l-2xl text-center text-base">Facilities</a>
+            <a href="{{ route('admin.summary') }}" class="px-6 py-4 hover:bg-[#ebd3d6] font-semibold transition text-center text-base">Summary</a>
         </aside>
 
         <!-- Main Content Area -->
-        <main class="flex-1 p-8 flex flex-col">
-            <!-- Heading & Tombol Tambah -->
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h1 class="text-3xl font-serif italic font-bold text-[#fff5f5]">Master Data Facilities</h1>
-                    <p class="text-xs text-[#d1c2c2] mt-1">Manage campus halls, rooms, and equipment inventory.</p>
-                </div>
-                <button class="bg-[#a8caa4] text-[#2d402b] px-4 py-2 rounded-xl text-xs font-semibold shadow hover:opacity-90 transition flex items-center gap-1.5">
-                    + Add New Facility
-                </button>
+        <main class="flex-1 p-6 flex flex-col gap-6">
+            <!-- Header Section -->
+            <div>
+                <h1 class="text-3xl font-['Playfair_Display',serif] italic font-semibold text-[#fff5f5]">Master Data Facilities</h1>
+                <p class="text-xs text-[#d1c2c2] mt-0.5">Admins can bla bla bla</p>
             </div>
 
-            <!-- Content Container (Kertas Putih Besar) -->
-            <div class="flex-1 bg-white rounded-2xl p-8 shadow-lg text-[#4b3839]">
+            <!-- Search, Filters, and Add Button Bar -->
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex-1 max-w-md">
+                    <input type="text" placeholder="" class="w-full bg-white rounded-full px-4 py-1.5 text-xs text-[#4b3839] focus:outline-none shadow-sm">
+                </div>
+                <div class="flex items-center gap-2">
+                    <select class="bg-white text-[#4b3839] text-xs px-3 py-1.5 rounded-full font-medium border-0 focus:outline-none shadow-sm cursor-pointer">
+                        <option>Type</option>
+                    </select>
+                    <select class="bg-white text-[#4b3839] text-xs px-3 py-1.5 rounded-full font-medium border-0 focus:outline-none shadow-sm cursor-pointer">
+                        <option>Location</option>
+                    </select>
+                    <select class="bg-white text-[#4b3839] text-xs px-3 py-1.5 rounded-full font-medium border-0 focus:outline-none shadow-sm cursor-pointer">
+                        <option>Status</option>
+                    </select>
+                    <button class="bg-[#fcebeb] hover:bg-[#f5d0d0] text-[#4b3839] px-4 py-1.5 rounded-full text-xs font-semibold shadow-sm transition flex items-center gap-1 ml-2">
+                        + Add Facility
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="bg-white rounded-2xl overflow-hidden shadow-lg text-[#4b3839]">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead class="bg-[#ebd3d6] text-[#4b3839] font-semibold">
+                        <tr>
+                            <th class="py-3 px-4 w-8"></th>
+                            <th class="py-3 px-4">Nama</th>
+                            <th class="py-3 px-4">Lokasi</th>
+                            <th class="py-3 px-4">Kapasitas</th>
+                            <th class="py-3 px-4">Status</th>
+                            <th class="py-3 px-4">Deskripsi</th>
+                            <th class="py-3 px-4">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 bg-white">
+                        <!-- Row 1 -->
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="py-3 px-4">
+                                <input type="checkbox" checked class="rounded border-gray-300 text-[#4b3839] focus:ring-0 accent-[#5c4f50] cursor-pointer">
+                            </td>
+                            <td class="py-3 px-4 font-medium text-gray-700">... Ruang kelas</td>
+                            <td class="py-3 px-4 text-gray-600">Gedung A - Lt.3</td>
+                            <td class="py-3 px-4 text-gray-600">40</td>
+                            <td class="py-3 px-4">
+                                <span class="bg-[#e2f0d9] text-[#2e6b27] px-2.5 py-0.5 rounded-md text-[10px] font-medium">Aktif</span>
+                            </td>
+                            <td class="py-3 px-4 text-gray-600">AC, proyektor</td>
+                            <td class="py-3 px-4">
+                                <a href="#" class="text-rose-500 hover:underline font-medium flex-inline items-center gap-1">
+                                    ✏ Ubah
+                                </a>
+                                <span class="text-gray-300 mx-1">|</span>
+                                <a href="#" class="text-gray-700 hover:underline font-medium">Nonaktifkan</a>
+                            </td>
+                        </tr>
+
+                        <!-- Row 2 -->
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="py-3 px-4">
+                                <input type="checkbox" class="rounded border-gray-300 text-[#4b3839] focus:ring-0 accent-[#5c4f50] cursor-pointer">
+                            </td>
+                            <td class="py-3 px-4 font-medium text-gray-700">... Laboratorium</td>
+                            <td class="py-3 px-4 text-gray-600">Gedung C - Lt.2</td>
+                            <td class="py-3 px-4 text-gray-600">25</td>
+                            <td class="py-3 px-4">
+                                <span class="bg-[#fff2cc] text-[#8a6d3b] px-2.5 py-0.5 rounded-md text-[10px] font-medium">Dalam perbaikan</span>
+                            </td>
+                            <td class="py-3 px-4 text-gray-400">—</td>
+                            <td class="py-3 px-4">
+                                <a href="#" class="text-rose-500 hover:underline font-medium flex-inline items-center gap-1">
+                                    ✏ Ubah
+                                </a>
+                                <span class="text-gray-300 mx-1">|</span>
+                                <a href="#" class="text-gray-700 hover:underline font-medium">Nonaktifkan</a>
+                            </td>
+                        </tr>
+
+                        <!-- Row 3 -->
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="py-3 px-4">
+                                <input type="checkbox" class="rounded border-gray-300 text-[#4b3839] focus:ring-0 accent-[#5c4f50] cursor-pointer">
+                            </td>
+                            <td class="py-3 px-4 font-medium text-gray-700">... Aula</td>
+                            <td class="py-3 px-4 text-gray-600">Gedung Rektorat</td>
+                            <td class="py-3 px-4 text-gray-600">300</td>
+                            <td class="py-3 px-4">
+                                <span class="bg-[#fcebeb] text-[#d9534f] px-2.5 py-0.5 rounded-md text-[10px] font-medium">Nonaktif</span>
+                            </td>
+                            <td class="py-3 px-4 text-gray-400">—</td>
+                            <td class="py-3 px-4">
+                                <a href="#" class="text-rose-500 hover:underline font-medium flex-inline items-center gap-1">
+                                    ✏ Ubah
+                                </a>
+                                <span class="text-gray-300 mx-1">|</span>
+                                <a href="#" class="text-emerald-600 hover:underline font-medium">Aktifkan</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Nonactivation Confirmation Section -->
+            <div class="bg-[#ebd3d6] rounded-2xl p-6 text-[#4b3839] shadow-md">
+                <h3 class="font-bold text-sm mb-3">Nonactivation Confirmation</h3>
                 
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold">Facility List</h2>
-                    <!-- Search input sederhana -->
-                    <input type="text" placeholder="Search facility..." class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-[#4b3839]">
+                <div class="bg-[#f8eeee] border border-dashed border-[#b89b9e] rounded-xl p-8 mb-4 min-h-[80px]">
                 </div>
 
-                <!-- Tabel Data Fasilitas -->
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead>
-                            <tr class="border-b border-gray-200 text-gray-500">
-                                <th class="py-3 px-4 font-semibold">No</th>
-                                <th class="py-3 px-4 font-semibold">Facility Name</th>
-                                <th class="py-3 px-4 font-semibold">Category</th>
-                                <th class="py-3 px-4 font-semibold">Capacity / Details</th>
-                                <th class="py-3 px-4 font-semibold">Status</th>
-                                <th class="py-3 px-4 font-semibold text-center">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <!-- Contoh Baris Data 1 -->
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="py-3 px-4">1</td>
-                                <td class="py-3 px-4 font-medium">Aula Utama FSM</td>
-                                <td class="py-3 px-4 text-gray-600">Room / Hall</td>
-                                <td class="py-3 px-4 text-gray-600">200 People</td>
-                                <td class="py-3 px-4">
-                                    <span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">Available</span>
-                                </td>
-                                <td class="py-3 px-4 text-center space-x-2">
-                                    <button class="text-blue-600 hover:underline text-xs font-medium">Edit</button>
-                                    <button class="text-red-600 hover:underline text-xs font-medium">Delete</button>
-                                </td>
-                            </tr>
-                            <!-- Contoh Baris Data 2 -->
-                            <tr class="hover:bg-gray-50 transition">
-                                <td class="py-3 px-4">2</td>
-                                <td class="py-3 px-4 font-medium">Proyektor Epson V1</td>
-                                <td class="py-3 px-4 text-gray-600">Equipment</td>
-                                <td class="py-3 px-4 text-gray-600">Portable Unit</td>
-                                <td class="py-3 px-4">
-                                    <span class="bg-yellow-100 text-yellow-700 text-xs px-2.5 py-1 rounded-full font-medium">In Use</span>
-                                </td>
-                                <td class="py-3 px-4 text-center space-x-2">
-                                    <button class="text-blue-600 hover:underline text-xs font-medium">Edit</button>
-                                    <button class="text-red-600 hover:underline text-xs font-medium">Delete</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="flex items-center gap-2 mb-3">
+                    <button class="bg-[#fcebeb] text-gray-400 px-4 py-1.5 rounded-lg text-xs font-medium cursor-not-allowed">
+                        Nonaktifkan
+                    </button>
+                    <button class="bg-[#6b5859] hover:bg-[#5a494a] text-white px-4 py-1.5 rounded-lg text-xs font-medium transition">
+                        Batal
+                    </button>
                 </div>
 
+                <p class="text-[11px] text-[#6b5859] italic">Tidak ada penghapusan permanen, hanya soft delete.</p>
             </div>
         </main>
     </div>
