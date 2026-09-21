@@ -38,9 +38,21 @@ Route::middleware('auth')->group(function () {
 Route::prefix('booking')->name('booking.')->group(function () {
     Route::get('/', [BookingController::class, 'index'])->name('index');
     Route::get('/history', [BookingController::class, 'history'])->name('history');
+    // Route::get('/{facility}', [BookingController::class, 'show'])->name('show');
+
+    Route::middleware('auth')->group(function () {
+        // Route::post('/', [BookingController::class, 'store'])->name('store');
+        Route::get('/success', [BookingController::class, 'success'])->name('reserve.success');
+        Route::get('/booking-history', [BookingController::class, 'history'])->name('history');
+        // Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
+        // Route::post('/{reservation}/cancel', [BookingController::class, 'cancel'])->name('cancel');
+    });
+
+    Route::get('/{facility}/booked-slots', [BookingController::class, 'getBookedSlots']);
     Route::get('/{facility}', [BookingController::class, 'show'])->name('show');
 
     Route::middleware('auth')->group(function () {
+        Route::get('/{facility}/reserve', [BookingController::class, 'reserve'])->name('reserve');
         Route::post('/', [BookingController::class, 'store'])->name('store');
         Route::post('/{reservation}/cancel', [BookingController::class, 'cancel'])->name('cancel');
     });

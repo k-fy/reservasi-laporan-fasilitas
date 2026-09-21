@@ -13,6 +13,7 @@ use App\Models\Report;
 
 #[Fillable([
     'name',
+    'nim_nip',
     'email',
     'password',
     'phone',
