@@ -12,20 +12,18 @@
     }
 </style>
 
-<!-- Top Header -->
 <header class="flex justify-between items-center px-8 py-2.5 bg-[#42393a] border-b-2 border-[#e2b8bc] text-white">
     <div class="flex items-center space-x-3">
-        <!-- Logo Image -->
+      
         <img src="{{ asset('images/logoPink.png') }}" alt="Chloe Logo" class="h-10 w-auto object-contain">
         
-        <!-- Teks Chloe & Subtitle -->
         <div class="flex flex-col justify-center">
             <div class="use-radley italic text-2xl font-bold tracking-wider text-[#ffdcdc] leading-tight">Chloe</div>
             <span class="use-radley italic text-xs text-[#ffdcdc] leading-tight">Campus Hall & Location Online E-booking</span>
         </div>
     </div>
 
-    <!-- Right Profile Info (Nama di bawah 'Logged in as') -->
+  
     <div class="flex items-center space-x-3 text-xs">
         <div class="flex flex-col text-right">
             <span class="text-[#d1c2c2] text-[11px] leading-tight">Logged in as</span>
