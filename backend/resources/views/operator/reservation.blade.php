@@ -3,132 +3,86 @@
 @section('title', 'Reservation Queue - Chloe')
 
 @section('content')
-<div x-data="{ selected: null }">
-
-    <h1 class="text-3xl font-serif italic text-white mb-1">Reservation Queue</h1>
-    <p class="text-rose-100 mb-6">Approved, reject, or cancel incoming reservations</p>
+<div x-data="{ pick: null, mode: null }">
+    <h1>Reservation Queue</h1>
+    <p class="sub">Approve, reject, or cancel incoming reservations</p>
 
     @if (session('success'))
-        <div class="mb-4 text-sm text-green-700 bg-green-100 rounded-lg px-4 py-2">
-            {{ session('success') }}
-        </div>
+        <div class="flash">{{ session('success') }}</div>
     @endif
 
-    {{-- Tabs + Filter --}}
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div class="flex gap-2">
-            @foreach (['pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'] as $value => $label)
-                <a href="{{ route('petugas.reservations', ['status' => $value]) }}"
-                   class="px-4 py-1.5 rounded-full text-sm font-semibold transition
-                          {{ $status === $value ? 'bg-rose-300 text-white' : 'bg-rose-100 text-neutral-600' }}">
-                    {{ $label }}
-                </a>
-            @endforeach
-        </div>
-
-        <form method="GET" class="flex gap-2">
+    <div class="toolbar">
+        @foreach (['pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'] as $value => $label)
+            <a href="{{ request()->fullUrlWithQuery(['status' => $value]) }}"
+               class="chip" aria-pressed="{{ $status === $value ? 'true' : 'false' }}">{{ $label }}</a>
+        @endforeach
+        <span class="grow"></span>
+        <form method="GET" style="display:contents">
             <input type="hidden" name="status" value="{{ $status }}">
-            <select name="facility_id" onchange="this.form.submit()"
-                class="rounded-full text-sm px-4 py-1.5 bg-rose-100 text-neutral-600 font-semibold border-none">
+            <input class="search" type="search" name="q" placeholder="Cari nama, fasilitas, keperluan" value="{{ request('q') }}">
+            <select class="sel" name="facility_id" onchange="this.form.submit()">
                 <option value="">Facility</option>
-                @foreach ($facilities as $facility)
-                    <option value="{{ $facility->id }}" {{ request('facility_id') == $facility->id ? 'selected' : '' }}>
-                        {{ $facility->name }}
-                    </option>
+                @foreach ($facilities as $f)
+                    <option value="{{ $f->id }}" {{ request('facility_id') == $f->id ? 'selected' : '' }}>{{ $f->name }}</option>
                 @endforeach
             </select>
-            <input type="date" name="date" value="{{ request('date') }}" onchange="this.form.submit()"
-                class="rounded-full text-sm px-4 py-1.5 bg-rose-100 text-neutral-600 font-semibold border-none">
+            <input class="sel" type="date" name="date" value="{{ request('date') }}" onchange="this.form.submit()">
         </form>
     </div>
 
-    {{-- Table --}}
-    <div class="bg-white rounded-2xl overflow-hidden mb-6">
-        <table class="w-full text-sm">
+    <div class="tablewrap">
+        <table>
             <thead>
-                <tr class="text-left text-neutral-500 border-b">
-                    <th class="px-4 py-3">Requester</th>
-                    <th class="px-4 py-3">Facility</th>
-                    <th class="px-4 py-3">Time Slot</th>
-                    <th class="px-4 py-3">Purpose</th>
-                    <th class="px-4 py-3">Status</th>
-                    <th class="px-4 py-3">Action</th>
-                </tr>
+                <tr><th>Requester</th><th>Facility</th><th>Time Slot</th><th>Purpose</th><th>Status</th><th>Action</th></tr>
             </thead>
             <tbody>
-                @forelse ($reservations as $reservation)
-                    <tr class="border-b last:border-0"
-                        :class="selected === {{ $reservation->id }} ? 'bg-rose-50' : ''">
-                        <td class="px-4 py-3">{{ $reservation->user->name ?? '-' }}</td>
-                        <td class="px-4 py-3">{{ $reservation->facility->name ?? '-' }}</td>
-                        <td class="px-4 py-3">
-                            {{ \Carbon\Carbon::parse($reservation->reservation_date)->format('d/m/Y') }}<br>
-                            <span class="text-neutral-400">
-                                {{ \Carbon\Carbon::parse($reservation->start_time)->format('H:i') }}
-                                -
-                                {{ \Carbon\Carbon::parse($reservation->end_time)->format('H:i') }}
-                            </span>
+                @forelse ($reservations as $r)
+                    <tr :class="pick === {{ $r->id }} ? 'sel-row' : ''">
+                        <td>{{ $r->user->name ?? '-' }}</td>
+                        <td>{{ $r->facility->name ?? '-' }}</td>
+                        <td>{{ \Carbon\Carbon::parse($r->reservation_date)->translatedFormat('d M Y') }}
+                            <small>{{ \Carbon\Carbon::parse($r->start_time)->format('H:i') }} – {{ \Carbon\Carbon::parse($r->end_time)->format('H:i') }}</small>
                         </td>
-                        <td class="px-4 py-3">{{ $reservation->purpose }}</td>
-                        <td class="px-4 py-3">
-                            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-600">
-                                {{ ucfirst($reservation->status) }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3">
-                            @if ($status === 'pending')
-                                <div class="flex gap-2">
-                                    <form method="POST" action="{{ route('petugas.reservations.approve', $reservation) }}">
+                        <td>{{ $r->purpose }}</td>
+                        <td><span class="badge b-{{ $r->status }}">{{ ucfirst($r->status) }}</span></td>
+                        <td>
+                            @if ($r->status === 'pending')
+                                <div class="act">
+                                    <form method="POST" action="{{ route('petugas.reservations.approve', $r) }}">
                                         @csrf
-                                        <button type="submit"
-                                            class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
-                                            Approve
-                                        </button>
+                                        <button type="submit" class="mini go">Approve</button>
                                     </form>
-                                    <button type="button" x-on:click="selected = {{ $reservation->id }}"
-                                        class="px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-semibold">
-                                        Reject
-                                    </button>
+                                    <button type="button" class="mini no"
+                                        x-on:click="pick = {{ $r->id }}; mode = 'reject'">Reject</button>
                                 </div>
+                            @elseif ($r->status === 'approved')
+                                <button type="button" class="mini no"
+                                    x-on:click="pick = {{ $r->id }}; mode = 'cancel'">Cancel</button>
                             @else
-                                <span class="text-neutral-400 text-xs">-</span>
+                                <small>{{ $r->cancel_reason ?? '—' }}</small>
                             @endif
                         </td>
                     </tr>
                 @empty
-                    <tr>
-                        <td colspan="6" class="px-4 py-6 text-center text-neutral-400">
-                            Belum ada reservasi dengan status ini.
-                        </td>
-                    </tr>
+                    <tr><td colspan="6" style="text-align:center;color:#7c6367;padding:28px">Tidak ada reservasi di tab ini.</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    {{-- Panel reject reason --}}
-    @if ($status === 'pending')
-        <form method="POST"
-              x-bind:action="selected ? `/petugas/reservations/${selected}/reject` : '#'"
-              class="bg-rose-100 rounded-2xl p-6">
-            @csrf
-            <h2 class="font-semibold text-neutral-800 mb-3">Cancellation / Rejection Reason</h2>
-            <textarea name="cancel_reason" rows="4" required
-                class="w-full rounded-xl border-2 border-dashed border-rose-300 bg-white px-4 py-3
-                       text-neutral-700 focus:outline-none focus:ring-2 focus:ring-rose-300"
-                placeholder="Tulis alasan penolakan di sini..."></textarea>
-
-            <div class="flex gap-3 mt-4">
-                <button type="button" x-on:click="selected = null"
-                    class="px-5 py-2 rounded-full bg-white text-neutral-600 font-semibold">
-                    Cancel
-                </button>
-                <button type="submit" x-bind:disabled="!selected"
-                    class="px-5 py-2 rounded-full bg-rose-400 text-white font-semibold disabled:opacity-50">
-                    Confirm
-                </button>
-            </div>
-        </form>
+    @if ($status !== 'rejected')
+        <section class="reason">
+            <h3>Cancellation / Rejection Reason</h3>
+            <div class="target" x-text="pick ? ((mode === 'cancel' ? 'Membatalkan' : 'Menolak') + ' reservasi #' + pick) : 'Pilih Reject atau Cancel pada salah satu reservasi untuk menulis alasan.'"></div>
+            <form method="POST" x-bind:action="pick ? ('/petugas/reservations/' + pick + '/' + mode) : '#'">
+                @csrf
+                <textarea name="cancel_reason" placeholder="Tulis alasan yang akan dilihat pemohon" x-bind:disabled="!pick" required></textarea>
+                <div class="btns">
+                    <button type="button" class="btn ghost" x-on:click="pick = null; mode = null" x-bind:disabled="!pick">Cancel</button>
+                    <button type="submit" class="btn main" x-bind:disabled="!pick">Confirm</button>
+                </div>
+            </form>
+        </section>
     @endif
 </div>
 @endsection

@@ -18,13 +18,13 @@ class Facility extends Model
         'image',
     ];
 
-    public function reservations()
-    {
-        return $this->hasMany(Reservation::class);
-    }
-
     public function reports()
     {
         return $this->hasMany(Report::class);
+    }
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class);
     }
 }

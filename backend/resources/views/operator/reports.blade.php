@@ -1,75 +1,83 @@
 @extends('layouts.operator')
 
-@section('title', 'Reports Queue - Chloe')
+@section('title', 'Report Queue - Chloe')
 
 @section('content')
-<div x-data="{ selected: null }">
-
-    <h1 class="text-3xl font-serif italic text-white mb-1">Reports Queue</h1>
-    <p class="text-rose-100 mb-6">Review dan tandai laporan kerusakan yang masuk sebagai selesai.</p>
+<div x-data="{ pick: null }">
+    <h1>Report Queue</h1>
+    <p class="sub">Review, update, and resolve facility reports</p>
 
     @if (session('success'))
-        <div class="mb-4 text-sm text-green-700 bg-green-100 rounded-lg px-4 py-2">
-            {{ session('success') }}
-        </div>
+        <div class="flash">{{ session('success') }}</div>
     @endif
 
-    {{-- Tabs status --}}
-    <div class="flex gap-2 mb-6">
+    <div class="toolbar">
         @foreach (['baru' => 'New', 'diproses' => 'In Progress', 'selesai' => 'Resolved'] as $value => $label)
-            <a href="{{ route('petugas.reports', ['status' => $value]) }}"
-               class="px-4 py-1.5 rounded-full text-sm font-semibold transition
-                      {{ $status === $value ? 'bg-rose-300 text-white' : 'bg-rose-100 text-neutral-600' }}">
-                {{ $label }}
-            </a>
+            <a href="{{ request()->fullUrlWithQuery(['status' => $value]) }}"
+               class="chip" aria-pressed="{{ $status === $value ? 'true' : 'false' }}">{{ $label }}</a>
         @endforeach
+        <span class="grow"></span>
+        <form method="GET" style="display:contents">
+            <input type="hidden" name="status" value="{{ $status }}">
+            <input class="search" type="search" name="q" placeholder="Cari judul, fasilitas, pelapor" value="{{ request('q') }}">
+            <select class="sel" name="facility_id" onchange="this.form.submit()">
+                <option value="">Facility</option>
+                @foreach ($facilities as $f)
+                    <option value="{{ $f->id }}" {{ request('facility_id') == $f->id ? 'selected' : '' }}>{{ $f->name }}</option>
+                @endforeach
+            </select>
+            <input class="sel" type="date" name="date" value="{{ request('date') }}" onchange="this.form.submit()">
+        </form>
     </div>
 
-    {{-- Grid report cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        @forelse ($reports as $report)
-            <button type="button" x-on:click="selected = {{ $report->id }}"
-                class="text-left bg-white rounded-2xl p-4 shadow-sm border-2 transition"
-                :class="selected === {{ $report->id }} ? 'border-rose-400' : 'border-transparent'">
-                <div class="flex items-start justify-between mb-2">
-                    <div>
-                        <p class="font-semibold text-neutral-800">{{ $report->facility->name ?? '-' }}</p>
-                        <p class="text-xs text-neutral-400">oleh {{ $report->user->name ?? '-' }}</p>
-                    </div>
-                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-600">
-                        {{ ucfirst($status) }}
-                    </span>
+    <div class="cards">
+        @forelse ($reports as $r)
+            <div class="rc" :class="pick === {{ $r->id }} ? 'picked' : ''"
+                 x-on:click="pick = {{ $r->id }}" role="button" tabindex="0">
+                <div class="thumb">
+                    @if ($r->photo)
+                        <img src="{{ \Illuminate\Support\Facades\Storage::url($r->photo) }}" style="width:100%;height:100%;object-fit:cover">
+                    @else
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                    @endif
                 </div>
-                <p class="text-sm text-neutral-600 line-clamp-3">{{ $report->description }}</p>
-            </button>
+                <div>
+                    <h4>{{ $r->facility->name ?? '-' }}</h4>
+                    <p>{{ $r->description }}
+                        @if ($r->resolution_notes)<br><em>Catatan: {{ $r->resolution_notes }}</em>@endif
+                    </p>
+                    <div class="foot">
+                        <span>{{ $r->user->name ?? '-' }} · {{ $r->created_at->translatedFormat('d M Y') }}</span>
+                        @if ($r->status === 'baru')
+                            <form method="POST" action="{{ route('petugas.reports.start', $r) }}" style="margin-left:auto" x-on:click.stop>
+                                @csrf
+                                <button type="submit" class="mini">Start</button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+                <span class="badge b-{{ $r->status === 'baru' ? 'new' : ($r->status === 'diproses' ? 'progress' : 'resolved') }}">
+                    {{ ['baru'=>'New','diproses'=>'In Progress','selesai'=>'Resolved'][$r->status] }}
+                </span>
+            </div>
         @empty
-            <p class="text-rose-100 col-span-2">Belum ada report dengan status ini.</p>
+            <div class="card empty" style="grid-column:1/-1;min-height:0;text-align:center">Tidak ada laporan di tab ini.</div>
         @endforelse
     </div>
 
-    {{-- Panel resolusi --}}
     @if ($status !== 'selesai')
-        <form method="POST"
-              x-bind:action="selected ? `/petugas/reports/${selected}/resolve` : '#'"
-              class="bg-rose-100 rounded-2xl p-6">
-            @csrf
-            <h2 class="font-semibold text-neutral-800 mb-3">Resolution Notes</h2>
-            <textarea name="resolution_notes" rows="4" required
-                class="w-full rounded-xl border-2 border-dashed border-rose-300 bg-white px-4 py-3
-                       text-neutral-700 focus:outline-none focus:ring-2 focus:ring-rose-300"
-                placeholder="Tulis catatan penyelesaian di sini..."></textarea>
-
-            <div class="flex gap-3 mt-4">
-                <button type="button" x-on:click="selected = null"
-                    class="px-5 py-2 rounded-full bg-white text-neutral-600 font-semibold">
-                    Cancel
-                </button>
-                <button type="submit" x-bind:disabled="!selected"
-                    class="px-5 py-2 rounded-full bg-rose-400 text-white font-semibold disabled:opacity-50">
-                    Save &amp; Resolved
-                </button>
-            </div>
-        </form>
+        <section class="reason">
+            <h3>Resolution Notes</h3>
+            <div class="target" x-text="pick ? 'Menyelesaikan laporan #' + pick : 'Pilih satu laporan untuk menulis catatan penyelesaian.'"></div>
+            <form method="POST" x-bind:action="pick ? ('/petugas/reports/' + pick + '/resolve') : '#'">
+                @csrf
+                <textarea name="resolution_notes" placeholder="Apa yang sudah diperbaiki?" x-bind:disabled="!pick" required></textarea>
+                <div class="btns">
+                    <button type="button" class="btn ghost" x-on:click="pick = null" x-bind:disabled="!pick">Cancel</button>
+                    <button type="submit" class="btn main" x-bind:disabled="!pick">Save &amp; Resolved</button>
+                </div>
+            </form>
+        </section>
     @endif
 </div>
 @endsection

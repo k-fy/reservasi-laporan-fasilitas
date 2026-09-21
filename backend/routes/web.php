@@ -53,12 +53,17 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'role:petugas'])->prefix('petugas')->name('petugas.')->group(function () {
-    Route::get('/reports', [OperatorController::class, 'reports'])->name('reports');
-    Route::post('/reports/{report}/resolve', [OperatorController::class, 'resolveReport'])->name('reports.resolve');
-
     Route::get('/reservations', [OperatorController::class, 'reservations'])->name('reservations');
     Route::post('/reservations/{reservation}/approve', [OperatorController::class, 'approveReservation'])->name('reservations.approve');
     Route::post('/reservations/{reservation}/reject', [OperatorController::class, 'rejectReservation'])->name('reservations.reject');
+    Route::post('/reservations/{reservation}/cancel', [OperatorController::class, 'cancelReservation'])->name('reservations.cancel');
+
+    Route::get('/reports', [OperatorController::class, 'reports'])->name('reports');
+    Route::post('/reports/{report}/start', [OperatorController::class, 'startReport'])->name('reports.start');
+    Route::post('/reports/{report}/resolve', [OperatorController::class, 'resolveReport'])->name('reports.resolve');
+
+    Route::get('/facility-status', [OperatorController::class, 'facilityStatus'])->name('facility-status');
+    Route::post('/facility-status/{facility}/set', [OperatorController::class, 'setFacilityStatus'])->name('facility-status.set');
 });
 
 require __DIR__.'/auth.php';
