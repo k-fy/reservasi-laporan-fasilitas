@@ -14,12 +14,13 @@
 
     <div class="flex flex-1">
         <!-- Sidebar Navigation -->
-        <aside class="w-64 bg-[#e2b8bc] text-[#4b3839] flex flex-col p-0 m-0 space-y-0 shadow-md">
-            <a href="{{ route('admin.dashboard') }}" class="px-6 py-4 hover:bg-[#ebd3d6] font-semibold transition text-center text-base">Dashboard</a>
-            <a href="{{ route('admin.roles') }}" class="px-6 py-4 hover:bg-[#ebd3d6] font-semibold transition text-center text-base">Modify Roles</a>
-            <a href="{{ route('admin.facilities') }}" class="px-6 py-4 font-bold bg-[#5c4f50] text-white rounded-l-2xl text-center text-base">Facilities</a>
-            <a href="{{ route('admin.summary') }}" class="px-6 py-4 hover:bg-[#ebd3d6] font-semibold transition text-center text-base">Summary</a>
-        </aside>
+        <!-- Sidebar Navigation Baru (Tanpa Dashboard & Menggunakan Recap) -->
+        <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-[#e2b8bc] text-[#4b3839] flex flex-col p-0 m-0 space-y-0 shadow-md">
+        <a href="{{ route('admin.roles') }}" class="px-6 py-4 hover:bg-[#ebd3d6] font-semibold transition text-center text-base">Accounts</a>
+        <a href="{{ route('admin.facilities') }}" class="px-6 py-4 font-bold bg-[#5c4f50] text-white rounded-l-2xl text-center text-base">Facilities</a>
+        <a href="{{ route('admin.summary') }}" class="px-6 py-4 hover:bg-[#ebd3d6] font-semibold transition text-center text-base">Recap</a>
+    </aside>
 
         <!-- Main Content Area -->
         <main class="flex-1 p-6 flex flex-col gap-6" x-data="facilityManager()">
@@ -84,7 +85,6 @@
                 <table class="w-full text-left text-xs border-collapse">
                     <thead class="bg-[#ebd3d6] text-[#4b3839] font-semibold">
                         <tr>
-                            <th class="py-3 px-4 w-8"></th>
                             <th class="py-3 px-4">Nama</th>
                             <th class="py-3 px-4">Lokasi</th>
                             <th class="py-3 px-4">Kapasitas</th>
@@ -97,9 +97,7 @@
                         @if (isset($facilities) && count($facilities) > 0)
                             @foreach ($facilities as $facility)
                                 <tr class="hover:bg-gray-50 transition">
-                                    <td class="py-3 px-4">
-                                        <input type="checkbox" class="rounded border-gray-300 text-[#4b3839] focus:ring-0 accent-[#5c4f50] cursor-pointer">
-                                    </td>
+                                    
                                     <td class="py-3 px-4 font-medium text-gray-700">{{ $facility->name }}</td>
                                     <td class="py-3 px-4 text-gray-600">{{ $facility->location ?? '-' }}</td>
                                     <td class="py-3 px-4 text-gray-600">{{ $facility->capacity }}</td>
@@ -133,9 +131,10 @@
                 </table>
             </div>
 
-            <!-- Nonactivation Confirmation Section -->
+            <!-- Nonactivation / Activation Confirmation Section -->
             <div class="bg-[#ebd3d6] rounded-2xl p-6 text-[#4b3839] shadow-md" x-show="confirmModal" style="display: none;" x-transition>
-                <h3 class="font-bold text-sm mb-3">Nonactivation Confirmation</h3>
+                <!-- Judul Modal Dinamis -->
+                <h3 class="font-bold text-sm mb-3" x-text="selectedFacility?.status === 'active' ? 'Nonactivation Confirmation' : 'Activation Confirmation'"></h3>
                 
                 <div class="bg-[#f8eeee] border border-dashed border-[#b89b9e] rounded-xl p-4 mb-4 text-xs">
                     <p class="font-semibold" x-text="`Are you sure you want to change status for: ${selectedFacility?.name}?`"></p>
@@ -147,8 +146,13 @@
                         <form :action="`/admin/facilities/${selectedFacility.id}/toggle-status`" method="POST">
                             @csrf
                             @method('PATCH')
-                            <button type="submit" class="bg-[#fcebeb] hover:bg-rose-100 text-rose-700 border border-rose-200 px-4 py-1.5 rounded-lg text-xs font-semibold transition">
-                                Toggle Status
+                            <!-- Tombol Dinamis berdasarkan status saat ini -->
+                            <button type="submit" 
+                                    :class="selectedFacility.status === 'active' 
+                                            ? 'bg-[#fcebeb] hover:bg-rose-100 text-rose-700 border border-rose-200' 
+                                            : 'bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300'"
+                                    class="px-4 py-1.5 rounded-lg text-xs font-semibold transition"
+                                    x-text="selectedFacility.status === 'active' ? 'Nonaktifkan' : 'Aktifkan'">
                             </button>
                         </form>
                     </template>

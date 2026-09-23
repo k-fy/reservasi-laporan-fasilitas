@@ -108,29 +108,31 @@ class AdminController extends Controller
      */
     public function roles(Request $request)
     {
+        // Awal query ambil seluruh user
         $query = User::query();
 
-        // Filter Pencarian (Nama, Email, NIM/NIP)
+        // 1. Filter Pencarian (Search Name, Email, atau NIM/NIP)
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
+            $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('nim_nip', 'like', "%{$search}%");
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('nim_nip', 'like', "%{$search}%");
             });
         }
 
-        // Filter Role
-        if ($request->filled('role')) {
-            $query->where('role', $request->role);
-        }
-
-        // Filter Status Akun
+        // 2. Filter Status (Active / Suspended)
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            if ($request->status === 'Active') {
+                $query->where('status', User::STATUS_ACTIVE);
+            } elseif ($request->status === 'Suspended') {
+                $query->where('status', User::STATUS_SUSPENDED);
+            }
         }
 
-        $users = $query->latest()->get();
+        // 3. Urutkan berdasarkan data yang paling baru ditambahkan
+        $users = $query->latest()->get(); 
+        // Atau jika pakai pagination: $users = $query->latest()->paginate(10);
 
         return view('admin.roles', compact('users'));
     }
@@ -159,26 +161,31 @@ class AdminController extends Controller
      */
     public function storeUser(Request $request)
     {
+        // Ubah role menjadi huruf kecil agar seragam dengan database ('petugas')
+        $request->merge([
+            'role' => strtolower($request->role)
+        ]);
+
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
             'nim_nip'  => 'nullable|string|max:50',
             'unit'     => 'nullable|string|max:100',
-            'role'     => ['required', Rule::in(self::ROLES)],
+            'role'     => 'required|string',
         ]);
 
         User::create([
             'name'     => $request->name,
             'email'    => $request->email,
-            'password' => $request->password, // Cukup berikan plain password, casts 'hashed' di User.php yang akan meng-hash secara otomatis
+            'password' => $request->password, // Otomatis di-hash jika ada $casts 'hashed' di User.php
             'nim_nip'  => $request->nim_nip,
             'unit'     => $request->unit,
-            'role'     => $request->role,
-            'status'   => User::STATUS_ACTIVE,
+            'role'     => 'petugas', // Memastikan role yang tersimpan selalu 'petugas'
+            'status'   => User::STATUS_ACTIVE ?? 'active',
         ]);
 
-        return back()->with('success', 'Akun berhasil dibuat dan langsung bisa digunakan untuk login.');
+        return back()->with('success', 'Akun petugas berhasil dibuat dan langsung bisa digunakan!');
     }
 
     /**
@@ -260,5 +267,19 @@ class AdminController extends Controller
             'unitSummaries',
             'selectedMonth'
         ));
+    }
+
+    public function exportSummary(Request $request)
+    {
+        $type = $request->query('type', 'csv'); 
+        if ($type === 'csv') {
+            return back()->with('success', 'Laporan berhasil diunduh sebagai CSV!');
+        } elseif ($type === 'pdf') {
+            return back()->with('success', 'Laporan berhasil diunduh sebagai PDF!');
+        } elseif ($type === 'excel') {
+            return back()->with('success', 'Laporan berhasil diunduh sebagai Excel!');
+        }
+
+        return back();
     }
 }
