@@ -79,6 +79,7 @@ Route::prefix('booking')->name('booking.')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/reports', [ReportController::class, 'create'])->name('reports.create');
     Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+    Route::get('/reports/history', [ReportController::class, 'history'])->name('reports.history');
 });
 
 // Panel petugas

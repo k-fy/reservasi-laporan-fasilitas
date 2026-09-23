@@ -89,8 +89,9 @@
 
             {{-- RESERVATION WIDGET --}}
             <div class="bg-white rounded-2xl overflow-hidden border border-[#EDD3D6] shadow-sm">
-                <div class="bg-[#c9a0a8] px-5 py-3">
+                <div class="bg-[#c9a0a8] px-5 py-3 flex justify-between items-center">
                     <span class="font-bold text-[#4b4848] text-sm font-['Poppins',sans-serif]">Reservation</span>
+                    <a href="{{ route('booking.history') }}" class="text-[#4b4848] font-bold text-lg hover:text-white transition">›</a>
                 </div>
                 <div class="divide-y divide-[#EDD3D6]">
                     @forelse($reservations as $r)
@@ -112,7 +113,6 @@
                                     @else bg-gray-100 text-gray-500 @endif">
                                     {{ ucfirst($r->status) }}
                                 </span>
-                                <a href="{{ route('booking.history') }}" class="text-[#814C5B] font-bold text-lg">›</a>
                             </div>
                         </div>
                     @empty
@@ -125,8 +125,9 @@
 
             {{-- REPORT STATUS WIDGET --}}
             <div class="bg-white rounded-2xl overflow-hidden border border-[#EDD3D6] shadow-sm">
-                <div class="bg-[#c9a0a8] px-5 py-3">
+                <div class="bg-[#c9a0a8] px-5 py-3 flex justify-between items-center">
                     <span class="font-bold text-[#4b4848] text-sm font-['Poppins',sans-serif]">Report Status</span>
+                    <a href="{{ route('reports.history') }}" class="text-[#4b4848] font-bold text-lg hover:text-white transition">›</a>
                 </div>
                 <div class="divide-y divide-[#EDD3D6]">
                     @forelse($reports as $report)
@@ -157,8 +158,7 @@
                                         @else
                                             {{ ucfirst($report->status) }}
                                         @endif
-                                    </span>
-                                <a href="{{ route('reports.create') }}" class="text-[#814C5B] font-bold text-lg">›</a>
+                                </span>
                             </div>
                         </div>
                     @empty
