@@ -152,6 +152,7 @@ td small{display:block;color:var(--ink-soft);font-size:10px}
   h1{font-size:26px}
 }
 </style>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body>
 <div class="app">
