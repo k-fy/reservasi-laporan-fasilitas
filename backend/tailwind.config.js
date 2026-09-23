@@ -9,10 +9,23 @@ export default {
         './resources/views/**/*.blade.php',
     ],
 
-    theme: {
+theme: {
         extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                serif: ['Georgia', ...defaultTheme.fontFamily.serif],
+            },
+            colors: {
+                chloe: {
+                    50:  '#FBF3F5',
+                    100: '#F6E7EC',
+                    200: '#ECC9D4',
+                    300: '#DDA7B8',
+                    400: '#C88AA0',
+                    500: '#B06E86',
+                    600: '#8E5468',
+                    700: '#7A465A',
+                },
             },
         },
     },

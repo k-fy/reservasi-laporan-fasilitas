@@ -11,6 +11,23 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+        public function show()
+    {
+        $user = Auth::user();
+
+        $reservations = Reservation::where('user_id', $user->id)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        $reports = Report::where('user_id', $user->id)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('profile.show', compact('user', 'reservations', 'reports'));
+    }
+    
     /**
      * Display the user's profile form.
      */

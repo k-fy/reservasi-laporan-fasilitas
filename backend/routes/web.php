@@ -1,17 +1,48 @@
 <?php
 
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\FacilityController;
+use App\Http\Controllers\OperatorController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
+Route::get('/', [DashboardController::class, 'index'])->name('home');
+
+// Home / Dashboard publik — pengunjung & pengguna sama-sama bisa lihat
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+// Dashboard khusus role — wajib login + role sesuai
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard/petugas', [DashboardController::class, 'petugas'])
+        ->middleware('role:petugas')->name('dashboard.petugas');
+
+    Route::get('/dashboard/admin', [DashboardController::class, 'admin'])
+        ->middleware('role:admin')->name('dashboard.admin');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard.index');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Halaman kelola milik admin
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+
+    Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard'); 
+
+    // Modify Roles Pages & Actions
+    Route::get('/roles', [AdminController::class, 'roles'])->name('roles');
+    Route::post('/roles', [AdminController::class, 'storeUser'])->name('users.store');
+    Route::patch('/users/{user}/role', [AdminController::class, 'updateRole'])->name('users.update-role');
+    Route::patch('/users/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('users.toggle-status');
+
+    // Facilities Pages & Actions
+    Route::get('/facilities', [AdminController::class, 'facilities'])->name('facilities');
+    Route::post('/facilities', [AdminController::class, 'storeFacility'])->name('facilities.store');
+    Route::put('/facilities/{facility}', [AdminController::class, 'updateFacility'])->name('facilities.update');
+    Route::patch('/facilities/{facility}/toggle-status', [AdminController::class, 'toggleFacilityStatus'])->name('facilities.toggle-status');
+
+    // Summary
+    Route::get('/summary', [AdminController::class, 'summary'])->name('summary');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -22,10 +53,22 @@ Route::middleware('auth')->group(function () {
 Route::prefix('booking')->name('booking.')->group(function () {
     Route::get('/', [BookingController::class, 'index'])->name('index');
     Route::get('/history', [BookingController::class, 'history'])->name('history');
+    // Route::get('/{facility}', [BookingController::class, 'show'])->name('show');
+
+    Route::middleware('auth')->group(function () {
+        // Route::post('/', [BookingController::class, 'store'])->name('store');
+        Route::get('/success', [BookingController::class, 'success'])->name('reserve.success');
+        Route::get('/booking-history', [BookingController::class, 'history'])->name('history');
+        // Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
+        // Route::post('/{reservation}/cancel', [BookingController::class, 'cancel'])->name('cancel');
+    });
+
+    Route::get('/{facility}/booked-slots', [BookingController::class, 'getBookedSlots']);
     Route::get('/{facility}', [BookingController::class, 'show'])->name('show');
     Route::get('/booking/{facility}/slots', [BookingController::class, 'getBookedSlots'])->name('booking.slots');
 
     Route::middleware('auth')->group(function () {
+        Route::get('/{facility}/reserve', [BookingController::class, 'reserve'])->name('reserve');
         Route::post('/', [BookingController::class, 'store'])->name('store');
         Route::post('/{reservation}/cancel', [BookingController::class, 'cancel'])->name('cancel');
     });
@@ -34,6 +77,21 @@ Route::prefix('booking')->name('booking.')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/reports', [ReportController::class, 'create'])->name('reports.create');
     Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+});
+
+Route::middleware(['auth', 'role:petugas'])->prefix('petugas')->name('petugas.')->group(function () {
+    Route::get('/reservations', [OperatorController::class, 'reservations'])->name('reservations');
+    Route::post('/reservations/{reservation}/approve', [OperatorController::class, 'approveReservation'])->name('reservations.approve');
+    Route::post('/reservations/{reservation}/reject', [OperatorController::class, 'rejectReservation'])->name('reservations.reject');
+    Route::post('/reservations/{reservation}/cancel', [OperatorController::class, 'cancelReservation'])->name('reservations.cancel');
+
+    Route::get('/reports', [OperatorController::class, 'reports'])->name('reports');
+    Route::post('/reports/{report}/start', [OperatorController::class, 'startReport'])->name('reports.start');
+    Route::post('/reports/{report}/resolve', [OperatorController::class, 'resolveReport'])->name('reports.resolve');
+    Route::post('/reports/{report}/reject', [OperatorController::class, 'rejectReport'])->name('reports.reject');
+
+    Route::get('/facility-status', [OperatorController::class, 'facilityStatus'])->name('facility-status');
+    Route::post('/facility-status/{facility}/set', [OperatorController::class, 'setFacilityStatus'])->name('facility-status.set');
 });
 
 require __DIR__.'/auth.php';
