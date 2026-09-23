@@ -11,6 +11,16 @@
 
     @include('admin.components.header')
 
+    @php
+        use App\Models\User;
+
+        $roleLabels = [
+            User::ROLE_ADMIN    => 'Admin',
+            User::ROLE_PETUGAS  => 'Officer',
+            User::ROLE_PENGGUNA => 'User',
+        ];
+    @endphp
+
     <div class="flex flex-1">
         <!-- Sidebar Navigation (Tidak Diubah) -->
         <aside class="w-64 bg-[#e2b8bc] text-[#4b3839] flex flex-col p-0 m-0 space-y-0 shadow-md">
@@ -34,7 +44,18 @@
                 </div>
             @endif
 
-            <!-- Tab Buttons (Tinggal 2 Tab) -->
+            <!-- Error Alert -->
+            @if($errors->any())
+                <div class="mb-4 bg-rose-100 border border-rose-300 text-rose-800 text-xs px-4 py-2 rounded-xl">
+                    <ul class="list-disc pl-4">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <!-- Tab Buttons -->
             <div class="flex space-x-2 items-end mb-[-1px] z-10">
                 <button onclick="switchTab('manage')" id="tab-manage" class="px-6 py-2.5 rounded-t-2xl bg-white text-[#4b3839] font-bold text-xs shadow-sm transition">
                     Manage Accounts
@@ -46,7 +67,7 @@
 
             <!-- Container Utama -->
             <div class="flex-1 bg-white rounded-b-2xl rounded-tr-2xl p-6 shadow-lg text-[#4b3839] min-h-[450px]">
-                
+
                 <!-- TAB 1: MANAGE ACCOUNTS -->
                 <div id="content-manage" class="tab-content">
                     <!-- Search & Filter Bar -->
@@ -59,14 +80,14 @@
                         </div>
                         <select name="role" onchange="this.form.submit()" class="px-3 py-1.5 text-xs border border-gray-200 rounded-xl bg-white text-gray-600 focus:outline-none cursor-pointer">
                             <option value="">All roles</option>
-                            <option value="Admin" {{ request('role') == 'Admin' ? 'selected' : '' }}>Admin</option>
-                            <option value="Petugas" {{ request('role') == 'Petugas' ? 'selected' : '' }}>Officer</option>
-                            <option value="Pengguna" {{ request('role') == 'Pengguna' ? 'selected' : '' }}>User</option>
+                            @foreach($roleLabels as $value => $label)
+                                <option value="{{ $value }}" {{ request('role') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
                         </select>
                         <select name="status" onchange="this.form.submit()" class="px-3 py-1.5 text-xs border border-gray-200 rounded-xl bg-white text-gray-600 focus:outline-none cursor-pointer">
                             <option value="">All statuses</option>
-                            <option value="Active" {{ request('status') == 'Aktif' ? 'selected' : '' }}>Active</option>
-                            <option value="Ditangguhkan" {{ request('status') == 'Ditangguhkan' ? 'selected' : '' }}>Suspended</option>
+                            <option value="{{ User::STATUS_ACTIVE }}" {{ request('status') === User::STATUS_ACTIVE ? 'selected' : '' }}>Active</option>
+                            <option value="{{ User::STATUS_SUSPENDED }}" {{ request('status') === User::STATUS_SUSPENDED ? 'selected' : '' }}>Suspended</option>
                         </select>
                     </form>
 
@@ -92,21 +113,21 @@
                                         <td class="p-3">{{ $user->unit ?? '-' }}</td>
                                         <td class="p-3">
                                             @if(Auth::id() === $user->id)
-                                                <span class="bg-gray-100 px-2.5 py-1 rounded-lg text-[11px] font-medium text-gray-700">{{ $user->role ?? 'Admin' }}</span>
+                                                <span class="bg-gray-100 px-2.5 py-1 rounded-lg text-[11px] font-medium text-gray-700">{{ $roleLabels[$user->role] ?? $user->role }}</span>
                                             @else
                                                 <form action="{{ route('admin.users.update-role', $user->id) }}" method="POST">
                                                     @csrf
                                                     @method('PATCH')
                                                     <select name="role" onchange="this.form.submit()" class="bg-gray-100 border border-gray-200 rounded-lg px-2 py-1 text-[11px] font-medium text-gray-700 cursor-pointer">
-                                                        <option value="Admin" {{ ($user->role ?? '') == 'Admin' ? 'selected' : '' }}>Admin</option>
-                                                        <option value="Petugas" {{ ($user->role ?? '') == 'Petugas' ? 'selected' : '' }}>Officer</option>
-                                                        <option value="Pengguna" {{ ($user->role ?? '') == 'Pengguna' ? 'selected' : '' }}>User</option>
+                                                        @foreach($roleLabels as $value => $label)
+                                                            <option value="{{ $value }}" {{ $user->role === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                        @endforeach
                                                     </select>
                                                 </form>
                                             @endif
                                         </td>
                                         <td class="p-3">
-                                            @if(($user->status ?? 'Aktif') === 'Aktif')
+                                            @if($user->isActive())
                                                 <span class="bg-[#e2f0d9] text-[#2e6b27] px-2.5 py-0.5 rounded-full text-[10px] font-medium">Active</span>
                                             @else
                                                 <span class="bg-pink-100 text-pink-500 px-2.5 py-0.5 rounded-full text-[10px] font-medium">Suspended</span>
@@ -122,8 +143,8 @@
                                                 <form action="{{ route('admin.users.toggle-status', $user->id) }}" method="POST" class="inline">
                                                     @csrf
                                                     @method('PATCH')
-                                                    <button type="submit" class="{{ ($user->status ?? 'Aktif') === 'Aktif' ? 'text-gray-500 hover:underline' : 'text-rose-600 font-semibold hover:underline' }}">
-                                                        {{ ($user->status ?? 'Aktif') === 'Aktif' ? 'Suspend' : 'Activate' }}
+                                                    <button type="submit" class="{{ $user->isActive() ? 'text-gray-500 hover:underline' : 'text-rose-600 font-semibold hover:underline' }}">
+                                                        {{ $user->isActive() ? 'Suspend' : 'Activate' }}
                                                     </button>
                                                 </form>
                                             @endif
@@ -137,37 +158,35 @@
                             </tbody>
                         </table>
                     </div>
-                    <p class="text-[11px] text-gray-500 italic">Role changes take effect upon the user's next login and are recorded in the activity log.</p>
+                    <p class="text-[11px] text-gray-500 italic">Role changes take effect on the user's next page load.</p>
                 </div>
 
                 <!-- TAB 2: ADD ACCOUNTS -->
-                
                 <div id="content-add" class="tab-content hidden">
-                    <h2 class="font-bold text-sm text-[#3b2b2c]">Add officer or admin account</h2>
-                    <p class="text-xs text-gray-400 mb-6">Create account credentials for officers or admins to access their dashboard.</p>
+                    <h2 class="font-bold text-sm text-[#3b2b2c]">Add officer, admin, or user account</h2>
+                    <p class="text-xs text-gray-400 mb-6">Create account credentials. The account is active immediately and can be used to log in.</p>
 
                     <form class="space-y-4 max-w-3xl" action="{{ route('admin.users.store') }}" method="POST">
                         @csrf
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-gray-700">Full name</label>
-                                <input type="text" name="name" required placeholder="e.g. Bagus Tri Prakoso" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
+                                <input type="text" name="name" value="{{ old('name') }}" required placeholder="e.g. Bagus Tri Prakoso" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-gray-700">Student ID / Employee ID</label>
-                                <input type="text" name="nim_nip" placeholder="19870412 201004 1 002" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
+                                <input type="text" name="nim_nip" value="{{ old('nim_nip') }}" placeholder="19870412 201004 1 002" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
                             </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-gray-700">Campus email</label>
-                                <input type="email" name="email" required placeholder="name@kampus.ac.id" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
-                                <span class="text-[10px] text-gray-400 mt-0.5 block">Only kampus.ac.id domains are accepted.</span>
+                                <input type="email" name="email" value="{{ old('email') }}" required placeholder="name@kampus.ac.id" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-gray-700">Temporary Password</label>
-                                <input type="password" name="password" required placeholder="Set default password" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
+                                <input type="password" name="password" required minlength="8" placeholder="Min. 8 characters" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
                                 <span class="text-[10px] text-gray-400 mt-0.5 block">Used for initial login.</span>
                             </div>
                         </div>
@@ -185,16 +204,11 @@
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-gray-700">Role</label>
                                 <select name="role" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
-                                    <option value="Petugas">Officer — manages schedules and approves bookings in their unit</option>
-                                    <option value="Pengguna">User — books and utilizes campus facilities</option>
-                                    <option value="Admin">Admin — has full system access</option>
+                                    <option value="{{ User::ROLE_PETUGAS }}">Officer — manages schedules and approves bookings</option>
+                                    <option value="{{ User::ROLE_PENGGUNA }}">User — books and utilizes campus facilities</option>
+                                    <option value="{{ User::ROLE_ADMIN }}">Admin — has full system access</option>
                                 </select>
                             </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold mb-1 text-gray-700">Note for recipient <span class="text-gray-400 font-normal">(optional)</span></label>
-                            <textarea name="notes" rows="3" placeholder="e.g. In charge of Main Hall schedule starting October 1st." class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none resize-none"></textarea>
                         </div>
 
                         <div class="flex space-x-2 pt-2">
@@ -211,19 +225,28 @@
     <!-- Script Tab Switching -->
     <script>
         function switchTab(tabName) {
+            // Sembunyikan semua kontainer tab
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            
+
+            // Reset style semua button tab
             document.querySelectorAll('[id^="tab-"]').forEach(el => {
                 el.classList.remove('bg-white', 'font-bold');
                 el.classList.add('bg-[#ebd3d6]', 'font-medium');
             });
-            
+
+            // Tampilkan kontainer yang dipilih
             document.getElementById('content-' + tabName).classList.remove('hidden');
-            
+
+            // Highlight button tab yang aktif
             const activeTab = document.getElementById('tab-' + tabName);
             activeTab.classList.remove('bg-[#ebd3d6]', 'font-medium');
             activeTab.classList.add('bg-white', 'font-bold');
         }
+
+        // Kalau ada error validasi dari form tambah akun, langsung buka tab "Add Accounts"
+        @if($errors->has('name') || $errors->has('email') || $errors->has('password') || $errors->has('nim_nip') || $errors->has('unit'))
+            switchTab('add');
+        @endif
     </script>
 
 </body>

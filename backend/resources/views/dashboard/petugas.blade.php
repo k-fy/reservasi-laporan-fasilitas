@@ -48,7 +48,8 @@
                 <li>
                     <span>{{ $f->name }}</span>
                     <span>
-                        <i class="dot" style="background: {{ $f->status === 'active' ? '#8fd3a0' : ($f->status === 'maintenance' ? '#f1c27a' : '#f28aa0') }}"></i>                        {{ ['available'=>'Available','inuse'=>'In use','repair'=>'Under repair'][$f->status] ?? ucfirst($f->status) }}
+                        <i class="dot" style="background: {{ $f->status === 'active' ? '#8fd3a0' : ($f->status === 'maintenance' ? '#f1c27a' : '#f28aa0') }}"></i>
+                        {{ ['active' => 'Available', 'maintenance' => 'Under repair', 'inactive' => 'Inactive'][$f->status] ?? ucfirst($f->status) }}
                     </span>
                 </li>
             @endforeach

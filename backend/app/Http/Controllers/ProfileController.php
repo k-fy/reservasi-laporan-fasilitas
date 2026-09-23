@@ -8,10 +8,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use App\Models\Reservation;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Report; 
 
 class ProfileController extends Controller
 {
-        public function show()
+    public function show()
     {
         $user = Auth::user();
 
@@ -27,15 +30,13 @@ class ProfileController extends Controller
 
         return view('profile.show', compact('user', 'reservations', 'reports'));
     }
-    
+
     /**
      * Display the user's profile form.
      */
     public function edit(Request $request): View
     {
-        return view('profile.edit', [
-            'user' => $request->user(),
-        ]);
+        return view('profile.edit', ['user' => Auth::user()]);
     }
 
     /**
@@ -43,16 +44,42 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+               $user = Auth::user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+            $request->validate([
+                'name'    => 'required|string|max:255',
+                'nim_nip' => 'nullable|string|max:50',
+                'bio'     => 'nullable|string|max:500',
+                'photo'   => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+                'email'   => 'required|email|unique:users,email,' . $user->id,
+            ]);
+
+            $data = [
+                'name'    => $request->name,
+                'nim_nip' => $request->nim_nip,
+                'bio'     => $request->bio,
+                'email'   => $request->email,
+            ];
+
+            if ($request->hasFile('photo')) {
+                if ($user->photo) {
+                    Storage::disk('public')->delete($user->photo);
+                }
+                $data['photo'] = $request->file('photo')->store('photos', 'public');
+            }
+
+            if ($request->filled('password')) {
+                $request->validate([
+                    'password'              => 'min:8',
+                    'password_confirmation' => 'required|same:password',
+                ]);
+                $data['password'] = Hash::make($request->password);
+            }
+
+            $user->update($data);
+
+            return redirect()->route('profile.show')->with('success', 'Profil berhasil diperbarui.');
         }
-
-        $request->user()->save();
-
-        return Redirect::route('profile.edit')->with('status', 'profile-updated');
-    }
 
     /**
      * Delete the user's account.
@@ -74,4 +101,5 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
 }
