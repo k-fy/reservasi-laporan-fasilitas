@@ -60,7 +60,7 @@ class BookingController extends Controller
 
         $booked = Reservation::where('facility_id', $facility->id)
             ->where('reservation_date', $date)
-            ->whereIn('status', ['pending', 'approved'])
+            ->whereIn('status', ['approved'])
             ->get(['start_time', 'end_time']);
 
         $amenitiesList = $facility->amenities 
@@ -125,7 +125,7 @@ class BookingController extends Controller
 
         $bookedSlots = Reservation::where('facility_id', $facility->id)
             ->where('reservation_date', $date)
-            ->whereIn('status', ['pending', 'approved'])
+            ->whereIn('status', 'approved')
             ->get(['start_time', 'end_time']);
 
         return response()->json($bookedSlots);

@@ -76,6 +76,7 @@ Route::middleware(['auth', 'role:petugas'])->prefix('petugas')->name('petugas.')
     Route::get('/reports', [OperatorController::class, 'reports'])->name('reports');
     Route::post('/reports/{report}/start', [OperatorController::class, 'startReport'])->name('reports.start');
     Route::post('/reports/{report}/resolve', [OperatorController::class, 'resolveReport'])->name('reports.resolve');
+    Route::post('/reports/{report}/reject', [OperatorController::class, 'rejectReport'])->name('reports.reject');
 
     Route::get('/facility-status', [OperatorController::class, 'facilityStatus'])->name('facility-status');
     Route::post('/facility-status/{facility}/set', [OperatorController::class, 'setFacilityStatus'])->name('facility-status.set');

@@ -22,6 +22,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])
                   ->default('pending');
             $table->text('cancel_reason')->nullable();
+            $table->foreignId('processed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }

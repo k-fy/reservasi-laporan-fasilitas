@@ -45,7 +45,7 @@ class StoreReservationRequest extends FormRequest
 
             $conflict = Reservation::where('facility_id', $this->facility_id)
                 ->where('reservation_date', $this->reservation_date)
-                ->whereIn('status', ['pending', 'approved'])
+                ->whereIn('status', ['approved'])
                 ->where(function ($q) use ($start, $end) {
                     $q->where('start_time', '<', $end)
                       ->where('end_time', '>', $start);

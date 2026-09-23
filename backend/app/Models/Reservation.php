@@ -16,7 +16,7 @@ class Reservation extends Model
         'end_time',
         'purpose',
         'status',
-        'cancellation_reason',
+        'cancel_reason',
         'processed_by',
     ];
 

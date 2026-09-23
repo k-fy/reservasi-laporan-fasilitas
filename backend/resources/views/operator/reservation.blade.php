@@ -10,6 +10,9 @@
     @if (session('success'))
         <div class="flash">{{ session('success') }}</div>
     @endif
+    @if (session('error'))
+        <div class="flash" style="background:#f3cdd4;color:#8a2c40">{{ session('error') }}</div>
+    @endif
 
     <div class="toolbar">
         @foreach (['pending' => 'Pending', 'approved' => 'Approved', 'rejected' => 'Rejected'] as $value => $label)
@@ -47,14 +50,26 @@
                         <td><span class="badge b-{{ $r->status }}">{{ ucfirst($r->status) }}</span></td>
                         <td>
                             @if ($r->status === 'pending')
-                                <div class="act">
-                                    <form method="POST" action="{{ route('petugas.reservations.approve', $r) }}">
-                                        @csrf
-                                        <button type="submit" class="mini go">Approve</button>
-                                    </form>
-                                    <button type="button" class="mini no"
-                                        x-on:click="pick = {{ $r->id }}; mode = 'reject'">Reject</button>
-                                </div>
+                                @if (!empty($r->slot_occupied))
+                                    <div style="margin-bottom:6px"><span class="badge b-rejected">SLOT PENUH</span></div>
+                                    <div class="act">
+                                        <button type="button" class="mini no"
+                                            x-on:click="pick = {{ $r->id }}; mode = 'reject'">Reject</button>
+                                    </div>
+                                    <small style="display:block;margin-top:4px;color:#8a2c40">Slot sudah disetujui untuk reservasi lain — tolak pengajuan ini.</small>
+                                @else
+                                    @if (!empty($r->peer_conflict))
+                                        <div style="margin-bottom:6px"><span class="badge b-pending">Bentrok pengajuan lain</span></div>
+                                    @endif
+                                    <div class="act">
+                                        <form method="POST" action="{{ route('petugas.reservations.approve', $r) }}">
+                                            @csrf
+                                            <button type="submit" class="mini go">Approve</button>
+                                        </form>
+                                        <button type="button" class="mini no"
+                                            x-on:click="pick = {{ $r->id }}; mode = 'reject'">Reject</button>
+                                    </div>
+                                @endif
                             @elseif ($r->status === 'approved')
                                 <button type="button" class="mini no"
                                     x-on:click="pick = {{ $r->id }}; mode = 'cancel'">Cancel</button>

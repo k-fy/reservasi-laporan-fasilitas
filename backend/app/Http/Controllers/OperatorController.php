@@ -35,6 +35,27 @@ class OperatorController extends Controller
             ->orderBy('reservation_date')
             ->get();
 
+        // Tandai konflik jadwal untuk tiap reservasi (dipakai di view sebagai warning)
+        foreach ($reservations as $r) {
+            // Bentrok dengan reservasi yang SUDAH approved => slot sudah penuh
+            $r->slot_occupied = Reservation::where('facility_id', $r->facility_id)
+                ->where('reservation_date', $r->reservation_date)
+                ->where('status', 'approved')
+                ->where('id', '!=', $r->id)
+                ->where('start_time', '<', $r->end_time)
+                ->where('end_time', '>', $r->start_time)
+                ->exists();
+
+            // Bentrok dengan sesama pending => petugas perlu memilih salah satu
+            $r->peer_conflict = Reservation::where('facility_id', $r->facility_id)
+                ->where('reservation_date', $r->reservation_date)
+                ->where('status', 'pending')
+                ->where('id', '!=', $r->id)
+                ->where('start_time', '<', $r->end_time)
+                ->where('end_time', '>', $r->start_time)
+                ->exists();
+        }
+
         $facilities = Facility::orderBy('name')->get();
 
         return view('operator.reservation', compact('reservations', 'status', 'facilities'));
@@ -42,7 +63,23 @@ class OperatorController extends Controller
 
     public function approveReservation(Reservation $reservation)
     {
-        $reservation->update(['status' => 'approved']);
+        // Cegah approve kalau slot sudah dipegang reservasi lain yang approved
+        $bentrok = Reservation::where('facility_id', $reservation->facility_id)
+            ->where('reservation_date', $reservation->reservation_date)
+            ->where('status', 'approved')
+            ->where('id', '!=', $reservation->id)
+            ->where('start_time', '<', $reservation->end_time)
+            ->where('end_time', '>', $reservation->start_time)
+            ->exists();
+
+        if ($bentrok) {
+            return back()->with('error', 'Slot fasilitas ini sudah penuh (disetujui untuk reservasi lain). Silakan tolak pengajuan ini.');
+        }
+
+        $reservation->update([
+            'status'       => 'approved',
+            'processed_by' => auth()->id(),
+        ]);
 
         return back()->with('success', 'Reservasi berhasil disetujui.');
     }
@@ -56,7 +93,8 @@ class OperatorController extends Controller
         $reservation->update([
             'status'        => 'rejected',
             'cancel_reason' => $validated['cancel_reason'],
-        ]);
+            'processed_by'  => auth()->id(),
+    ]);
 
         return redirect()->route('petugas.reservations', ['status' => 'rejected'])
             ->with('success', 'Reservasi berhasil ditolak.');
@@ -128,6 +166,22 @@ class OperatorController extends Controller
             ->with('success', 'Laporan berhasil ditandai selesai.');
     }
 
+    public function rejectReport(Request $request, Report $report)
+    {
+        $validated = $request->validate([
+            'resolution_notes' => 'required|string|max:1000',
+        ]);
+
+        $report->update([
+            'status'           => 'ditolak',
+            'resolution_notes' => $validated['resolution_notes'],
+            'handled_by'       => auth()->id(),
+        ]);
+
+        return redirect()->route('petugas.reports', ['status' => 'ditolak'])
+            ->with('success', 'Laporan ditandai ditolak.');
+    }
+
     /* ---------------- Facility Status ---------------- */
 
     public function facilityStatus(Request $request)
@@ -145,11 +199,13 @@ class OperatorController extends Controller
     public function setFacilityStatus(Request $request, Facility $facility)
     {
         $validated = $request->validate([
-            'status' => 'required|in:available,inuse,repair',
+            'status' => 'required|in:active,maintenance,inactive',
         ]);
 
         $facility->update(['status' => $validated['status']]);
 
-        return back()->with('success', $facility->name.' diubah ke '.$validated['status'].'.');
+        $labels = ['active' => 'Active', 'maintenance' => 'Under repair', 'inactive' => 'Inactive'];
+
+        return back()->with('success', $facility->name.' set to '.$labels[$validated['status']].'.');
     }
 }
