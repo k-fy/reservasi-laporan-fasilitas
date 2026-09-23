@@ -31,7 +31,7 @@ class BookingController extends Controller
                 ],
             ], [
                 'end_time.after' => 'Waktu selesai harus lebih besar dari waktu mulai.',
-                'start_time.regex' => 'Waktu pencarian mulai harus kelipatan 30 menit.',
+                'start_time.regex' => 'Waktu pencarian mulai harus kelipatan 30 menit (contoh: 07:00).',
                 'end_time.regex' => 'Waktu pencarian selesai harus kelipatan 30 menit.',
             ]);
         }
@@ -60,7 +60,7 @@ class BookingController extends Controller
 
         $booked = Reservation::where('facility_id', $facility->id)
             ->where('reservation_date', $date)
-            ->whereIn('status', ['pending', 'approved'])
+            ->whereIn('status', ['approved'])
             ->get(['start_time', 'end_time']);
 
         $amenitiesList = $facility->amenities 
@@ -94,6 +94,11 @@ class BookingController extends Controller
         ->with('end_time', $request->end_time);
     }
 
+    public function success()
+    {
+        return view('booking.success');
+    }
+
     // public function success()
     // {
     //     return view('booking.success');
@@ -124,7 +129,7 @@ class BookingController extends Controller
 
         $bookedSlots = Reservation::where('facility_id', $facility->id)
             ->where('reservation_date', $date)
-            ->whereIn('status', ['pending', 'approved'])
+            ->whereIn('status', 'approved')
             ->get(['start_time', 'end_time']);
 
         return response()->json($bookedSlots);

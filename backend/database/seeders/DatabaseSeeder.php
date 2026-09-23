@@ -46,6 +46,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        
+        // 4. Data fasilitas
+        $this->call(FacilitySeeder::class);
     }
 }

@@ -11,9 +11,9 @@
 @endif
 
 <div class="legend">
-    <span>{{ $facilities->where('status', 'available')->count() }} available</span>
-    <span>{{ $facilities->where('status', 'inuse')->count() }} in use</span>
-    <span>{{ $facilities->where('status', 'repair')->count() }} under repair</span>
+    <span>{{ $facilities->where('status', 'active')->count() }} active</span>
+    <span>{{ $facilities->where('status', 'maintenance')->count() }} under repair</span>
+    <span>{{ $facilities->where('status', 'inactive')->count() }} inactive</span>
 </div>
 
 <div class="fgrid">
@@ -27,11 +27,10 @@
                     </small>
                 </div>
                 <span class="badge s-{{ $f->status }}">
-                    {{ ['available'=>'Available','inuse'=>'In use','repair'=>'Under repair'][$f->status] ?? ucfirst($f->status) }}
-                </span>
+                {{ ['active'=>'Active','maintenance'=>'Under repair','inactive'=>'Inactive'][$f->status] ?? ucfirst($f->status) }}                  </span>
             </header>
             <div class="seg" role="group">
-                @foreach (['available' => 'Available', 'inuse' => 'In use', 'repair' => 'Under repair'] as $value => $label)
+                @foreach (['active' => 'Active', 'maintenance' => 'Under repair', 'inactive' => 'Inactive'] as $value => $label)
                     <form method="POST" action="{{ route('petugas.facility-status.set', $f) }}">
                         @csrf
                         <input type="hidden" name="status" value="{{ $value }}">

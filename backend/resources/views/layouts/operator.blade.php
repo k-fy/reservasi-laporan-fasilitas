@@ -23,6 +23,7 @@ button{cursor:pointer}
 .topbar{background:var(--topbar);display:flex;align-items:center;justify-content:space-between;padding:10px 22px;border-bottom:2px solid var(--blush)}
 .brand{display:flex;align-items:center;gap:10px;color:var(--blush)}
 .brand svg{width:34px;height:34px}
+.brand-logo{height:34px;width:auto;object-fit:contain;display:block}
 .brand b{display:block;font-family:var(--serif);font-style:italic;font-weight:500;font-size:20px;line-height:1}
 .brand small{display:block;font-family:var(--serif);font-style:italic;font-size:9px;opacity:.85;margin-top:2px}
 .user{display:flex;align-items:center;gap:10px;color:var(--blush);text-align:right;font-size:9px;line-height:1.3}
@@ -114,7 +115,7 @@ td small{display:block;color:var(--ink-soft);font-size:10px}
 .rc .badge{position:absolute;top:14px;right:14px}
 .rc .foot{margin-top:8px;display:flex;gap:6px;align-items:center;font-size:10px;color:var(--ink-soft)}
 
-.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
 .fc{background:#fff;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
 .fc header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .fc h4{margin:0;font-size:13px;font-weight:600}
@@ -124,13 +125,21 @@ td small{display:block;color:var(--ink-soft);font-size:10px}
 .seg form{display:contents}
 .seg button{border:0;background:transparent;border-radius:999px;padding:5px 4px;font-size:9.5px;font-weight:500;color:var(--ink-soft);width:100%}
 .seg button[aria-pressed="true"]{background:var(--rose);color:#fff;font-weight:600}
-.s-available{background:#d3ecd9;color:#2f6a3f}
-.s-inuse{background:#fbe6c6;color:#7a5314}
-.s-repair{background:#f3cdd4;color:#8a2c40}
+.s-active{background:#d3ecd9;color:#2f6a3f}
+.s-maintenance{background:#fbe6c6;color:#7a5314}
+.s-inactive{background:#e5e5e5;color:#555}
 .legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;color:var(--blush);font-size:10.5px}
 .flash{background:var(--blush);color:var(--ink);padding:8px 16px;border-radius:999px;display:inline-block;font-size:11px;margin-bottom:14px}
 
 [x-cloak]{display:none!important}
+
+/* Dropdown user & logout */
+.user{position:relative}
+.user-trigger{display:flex;align-items:center;gap:10px;cursor:pointer;background:transparent;border:0;color:inherit;font:inherit;padding:4px 6px;border-radius:10px}
+.user-trigger:hover{background:rgba(0,0,0,.06)}
+.user-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:170px;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:6px;z-index:50}
+.logout-item{width:100%;text-align:left;cursor:pointer;background:transparent;border:0;color:#a03a4a;font:inherit;padding:10px 12px;border-radius:8px}
+.logout-item:hover{background:#f6e7ea}
 
 @media (max-width:820px){
   .shell{grid-template-columns:1fr;grid-template-rows:auto 1fr}
@@ -148,16 +157,23 @@ td small{display:block;color:var(--ink-soft);font-size:10px}
 <div class="app">
   <header class="topbar">
     <div class="brand">
-      <svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
-        <path d="M20 20c-3-9-10-14-16-12 0 7 5 13 16 12Z"/><path d="M20 20c3-9 10-14 16-12 0 7-5 13-16 12Z"/>
-        <path d="M20 21c-6 1-11 6-10 12 6 0 10-4 10-12Z"/><path d="M20 21c6 1 11 6 10 12-6 0-10-4-10-12Z"/>
-        <path d="M20 12v24"/>
-      </svg>
+      <img src="{{ asset('images/logoPink.png') }}" alt="Chloe" class="brand-logo">
       <div><b>Chloe</b><small>Campus Hall &amp; Location Online E-booking</small></div>
     </div>
-    <div class="user">
-      <div>Logged in as<u>{{ Auth::user()->name }}</u></div>
-      <span class="avatar" aria-hidden="true"></span>
+
+    <div class="user" x-data="{ open: false }" @click.outside="open = false">
+      <button type="button" class="user-trigger" @click="open = !open" :aria-expanded="open">
+        <div>Logged in as<u>{{ Auth::user()->name }}</u></div>
+        <span class="avatar" aria-hidden="true"></span>
+      </button>
+
+      <div class="user-menu" x-show="open" x-cloak x-transition>
+        <form method="POST" action="{{ route('logout') }}"
+              onsubmit="return confirm('Yakin ingin keluar dari sesi ini? Anda harus login kembali untuk mengakses dashboard.')">
+          @csrf
+          <button type="submit" class="logout-item">Logout</button>
+        </form>
+      </div>
     </div>
   </header>
 
@@ -166,11 +182,11 @@ td small{display:block;color:var(--ink-soft);font-size:10px}
       <a href="{{ route('dashboard.petugas') }}" @if(request()->routeIs('dashboard.petugas')) aria-current="page" @endif>Dashboard</a>
       <a href="{{ route('petugas.reservations') }}" @if(request()->routeIs('petugas.reservations')) aria-current="page" @endif>
           Reservations
-          @if($navPendingCount) <span class="count">{{ $navPendingCount }}</span> @endif
+          @if($navPendingCount ?? 0) <span class="count">{{ $navPendingCount }}</span> @endif
       </a>
       <a href="{{ route('petugas.reports') }}" @if(request()->routeIs('petugas.reports')) aria-current="page" @endif>
           Reports
-          @if($navNewReportCount) <span class="count">{{ $navNewReportCount }}</span> @endif
+          @if($navNewReportCount ?? 0) <span class="count">{{ $navNewReportCount }}</span> @endif
       </a>
       <a href="{{ route('petugas.facility-status') }}" @if(request()->routeIs('petugas.facility-status')) aria-current="page" @endif>Facility Status</a>
     </nav>

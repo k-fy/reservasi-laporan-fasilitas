@@ -2,22 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
-use App\Models\Facility;
 
-class Reservation extends Model
+class Booking extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'facility_id',
-        'reservation_date',
+        'location',
         'start_time',
         'end_time',
-        'purpose',
         'status',
-        'cancel_reason',
-        'processed_by',
+        'purpose',
     ];
 
     public function user()
@@ -28,10 +27,5 @@ class Reservation extends Model
     public function facility()
     {
         return $this->belongsTo(Facility::class);
-    }
-
-    public function processedBy()
-    {
-        return $this->belongsTo(User::class, 'processed_by');
     }
 }
