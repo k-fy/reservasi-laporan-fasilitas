@@ -7,6 +7,7 @@ use App\Models\Facility;
 use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
@@ -161,31 +162,22 @@ class AdminController extends Controller
      */
     public function storeUser(Request $request)
     {
-        // Ubah role menjadi huruf kecil agar seragam dengan database ('petugas')
-        $request->merge([
-            'role' => strtolower($request->role)
-        ]);
-
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|string|min:8',
-            'nim_nip'  => 'nullable|string|max:50',
-            'unit'     => 'nullable|string|max:100',
-            'role'     => 'required|string',
+            'role'     => 'required|string|in:petugas,pengguna,Petugas,Pengguna',
         ]);
 
         User::create([
             'name'     => $request->name,
             'email'    => $request->email,
-            'password' => $request->password, // Otomatis di-hash jika ada $casts 'hashed' di User.php
-            'nim_nip'  => $request->nim_nip,
-            'unit'     => $request->unit,
-            'role'     => 'petugas', // Memastikan role yang tersimpan selalu 'petugas'
-            'status'   => User::STATUS_ACTIVE ?? 'active',
+            'password' => Hash::make($request->password),
+            'role'     => strtolower($request->role), // Mengubah ke huruf kecil konsisten
+            'status'   => 'active',
         ]);
 
-        return back()->with('success', 'Akun petugas berhasil dibuat dan langsung bisa digunakan!');
+        return back()->with('success', 'Akun berhasil dibuat!');
     }
 
     /**

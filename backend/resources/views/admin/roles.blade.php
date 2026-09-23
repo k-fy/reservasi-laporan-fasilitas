@@ -51,7 +51,7 @@
                     Manage Accounts
                 </button>
                 <button onclick="switchTab('add')" id="tab-add" class="px-6 py-2.5 rounded-t-2xl bg-[#ebd3d6] text-[#4b3839] font-medium text-xs shadow-sm transition hover:bg-[#e0c4c7]">
-                    Add Officer
+                    Add Account
                 </button>
             </div>
 
@@ -78,56 +78,65 @@
                     <!-- Table Container -->
                     <div class="overflow-x-auto rounded-2xl border border-pink-100 mb-4">
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-[#ebd3d6] text-[#4b3839] font-semibold">
+                            <thead class="bg-[#f2e6e6] text-[#4b3839]">
                                 <tr>
-                                    <th class="p-3 pl-4">Name</th>
-                                    <th class="p-3">Campus email</th>
-                                    <th class="p-3">Unit</th>
-                                    <th class="p-3">Status</th>
-                                    <th class="p-3">Last active</th>
-                                    <th class="p-3">Action</th>
+                                    <th class="p-3 text-left">Name</th>
+                                    <th class="p-3 text-left">Campus email</th>
+                                    <th class="p-3 text-left">Role</th> <!-- Tambahkan ini -->
+                                    <th class="p-3 text-left">Unit</th>
+                                    <th class="p-3 text-left">Status</th>
+                                    <th class="p-3 text-left">Last active</th>
+                                    <th class="p-3 text-left">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white">
-                                @forelse($users as $user)
-                                    <tr>
-                                        <td class="p-3 pl-4 font-medium">{{ $user->name }}</td>
-                                        <td class="p-3 text-gray-500">{{ $user->email }}</td>
-                                        <td class="p-3">{{ $user->unit ?? '-' }}</td>
-
-                                        <!-- Status Badge -->
-                                        <td class="p-3">
-                                            @if($user->isActive())
-                                                <span class="bg-[#e2f0d9] text-[#2e6b27] px-2.5 py-0.5 rounded-full text-[10px] font-medium">Active</span>
-                                            @else
-                                                <span class="bg-pink-100 text-pink-500 px-2.5 py-0.5 rounded-full text-[10px] font-medium">Suspended</span>
-                                            @endif
-                                        </td>
-
-                                        <td class="p-3 text-gray-500">
-                                            {{ $user->updated_at ? $user->updated_at->diffForHumans() : 'Just now' }}
-                                        </td>
-
-                                        <!-- Action Button -->
-                                        <td class="p-3">
-                                            @if(Auth::id() === $user->id)
-                                                <span class="text-gray-400 italic">Your account</span>
-                                            @else
-                                                <form action="{{ route('admin.users.toggle-status', $user->id) }}" method="POST" class="inline">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <button type="submit" class="{{ $user->isActive() ? 'text-gray-500 hover:underline' : 'text-rose-600 font-semibold hover:underline' }}">
-                                                        {{ $user->isActive() ? 'Suspend' : 'Activate' }}
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="p-4 text-center text-gray-400">No users found.</td>
-                                    </tr>
-                                @endforelse
+                                @foreach ($users as $user)
+                                <tr class="hover:bg-gray-50 transition">
+                                    <!-- 1. Name -->
+                                    <td class="p-3 font-semibold text-gray-800">{{ $user->name }}</td>
+                                    
+                                    <!-- 2. Campus email -->
+                                    <td class="p-3 text-gray-600">{{ $user->email }}</td>
+                                    
+                                    <!-- 3. Role (Tampilkan $user->role) -->
+                                    <td class="p-3">
+                                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-semibold {{ strtolower($user->role ?? '') === 'petugas' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700' }}">
+                                            {{ ucfirst($user->role ?? 'Pengguna') }}
+                                        </span>
+                                    </td>
+                                    
+                                    <!-- 4. Unit (Tampilkan $user->unit) -->
+                                    <td class="p-3 text-gray-600">{{ $user->unit ?? '-' }}</td>
+                                    
+                                    <!-- 5. Status -->
+                                    <td class="p-3">
+                                        @if(in_array(strtolower($user->status ?? ''), ['active', 'aktif', '1']))
+                                            <span class="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-[10px] font-semibold">Active</span>
+                                        @else
+                                            <span class="bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded-full text-[10px] font-semibold">Suspended</span>
+                                        @endif
+                                    </td>
+                                    
+                                    <!-- 6. Last active -->
+                                    <td class="p-3 text-gray-500 text-xs">{{ $user->updated_at ? $user->updated_at->diffForHumans() : '-' }}</td>
+                                    
+                                    <!-- 7. Action -->
+                                    <td class="p-3">
+                                        @if (Auth::id() === $user->id)
+                                            <span class="text-xs text-gray-400 italic">Your account</span>
+                                        @else
+                                            <form action="{{ route('admin.users.toggle-status', $user->id) }}" method="POST" class="inline">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" 
+                                                        class="text-xs font-semibold hover:underline {{ in_array(strtolower($user->status ?? ''), ['active', 'aktif', '1']) ? 'text-rose-600' : 'text-emerald-600' }}">
+                                                    {{ in_array(strtolower($user->status ?? ''), ['active', 'aktif', '1']) ? 'Suspend' : 'Activate' }}
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
@@ -184,13 +193,23 @@
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
+                        <!-- Placement Unit -->
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-gray-700">Placement unit</label>
-                                <select name="unit" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
-                                    <option value="Gedung Rektorat">Rectorate Building</option>
+                                <select name="unit" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none cursor-pointer">
+                                    <option value="Gedung Rektorat">Gedung Rektorat</option>
                                     <option value="BAUK">BAUK</option>
-                                    <option value="Gedung A">Building A</option>
-                                    <option value="Gedung C">Building C</option>
+                                    <option value="Gedung A">Gedung A</option>
+                                    <option value="Gedung C">Gedung C</option>
+                                </select>
+                            </div>
+
+                            <!-- Account Role (Sama persis styling & ukurannya) -->
+                            <div>
+                                <label class="block text-xs font-semibold mb-1 text-gray-700">Account Role</label>
+                                <select name="role" required class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none cursor-pointer">
+                                    <option value="petugas">Petugas (Officer)</option>
+                                    <option value="pengguna">Pengguna (Mahasiswa/Dosen/Staf)</option>
                                 </select>
                             </div>
                         </div>
@@ -201,7 +220,7 @@
                         </div>
 
                         <div class="flex space-x-2 pt-2">
-                            <button type="submit" class="bg-[#785b5d] text-white px-5 py-2 rounded-xl text-xs font-medium hover:bg-[#5c4f50] transition">Create Officer Account</button>
+                            <button type="submit" class="bg-[#785b5d] text-white px-5 py-2 rounded-xl text-xs font-medium hover:bg-[#5c4f50] transition">Create Account</button>
                             <button type="reset" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-xl text-xs font-medium hover:bg-gray-200 transition">Clear form</button>
                         </div>
                     </form>
