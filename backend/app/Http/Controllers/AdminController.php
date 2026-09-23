@@ -6,11 +6,12 @@ use App\Models\User;
 use App\Models\Facility;
 use App\Models\Booking;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
+    private const ROLES = [User::ROLE_ADMIN, User::ROLE_PETUGAS, User::ROLE_PENGGUNA];
+
     /**
      * Halaman Dashboard Admin
      */
@@ -24,10 +25,10 @@ class AdminController extends Controller
             ->count();
         $totalFacilities = Facility::count();
         $totalBookingsThisWeek = Booking::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
-        
+
         // Persentase pemakaian fasilitas minggu ini (Contoh kalkulasi sederhana)
-        $facilityUsagePercent = $totalFacilities > 0 
-            ? round(($activeBookingsCount / $totalFacilities) * 100) 
+        $facilityUsagePercent = $totalFacilities > 0
+            ? round(($activeBookingsCount / $totalFacilities) * 100)
             : 0;
 
         // 2. Permintaan Terbaru (Pending & Recent)
@@ -52,19 +53,18 @@ class AdminController extends Controller
         ));
     }
 
-
     /**
      * Tambah Fasilitas Baru
      */
     public function storeFacility(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|string',
-            'location' => 'nullable|string',
-            'capacity' => 'required|integer|min:0',
+            'name'        => 'required|string|max:255',
+            'type'        => 'required|string',
+            'location'    => 'nullable|string',
+            'capacity'    => 'required|integer|min:0',
             'description' => 'nullable|string',
-            'status' => 'required|in:active,maintenance,inactive',
+            'status'      => 'required|in:active,maintenance,inactive',
         ]);
 
         Facility::create($validated);
@@ -78,12 +78,12 @@ class AdminController extends Controller
     public function updateFacility(Request $request, Facility $facility)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|string',
-            'location' => 'nullable|string',
-            'capacity' => 'required|integer|min:0',
+            'name'        => 'required|string|max:255',
+            'type'        => 'required|string',
+            'location'    => 'nullable|string',
+            'capacity'    => 'required|integer|min:0',
             'description' => 'nullable|string',
-            'status' => 'required|in:active,maintenance,inactive',
+            'status'      => 'required|in:active,maintenance,inactive',
         ]);
 
         $facility->update($validated);
@@ -97,13 +97,14 @@ class AdminController extends Controller
     public function toggleFacilityStatus(Facility $facility)
     {
         // Ubah status active -> inactive, atau sebaliknya
-        $newStatus = ($facility->status === 'active') ? 'inactive' : 'active';
+        $newStatus = $facility->status === 'active' ? 'inactive' : 'active';
         $facility->update(['status' => $newStatus]);
 
         return back()->with('success', 'Status fasilitas berhasil diperbarui.');
     }
+
     /**
-     * Halaman Modify Roles (Kelola Akun & Verifikasi)
+     * Halaman Modify Roles (Kelola Akun)
      */
     public function roles(Request $request)
     {
@@ -112,7 +113,7 @@ class AdminController extends Controller
         // Filter Pencarian (Nama, Email, NIM/NIP)
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('email', 'like', "%{$search}%")
                   ->orWhere('nim_nip', 'like', "%{$search}%");
@@ -131,10 +132,7 @@ class AdminController extends Controller
 
         $users = $query->latest()->get();
 
-        // Data pendaftar yang menunggu verifikasi (misal status 'pending_verification')
-        $pendingUsers = User::where('status', 'pending_verification')->latest()->get();
-
-        return view('admin.roles', compact('users', 'pendingUsers'));
+        return view('admin.roles', compact('users'));
     }
 
     /**
@@ -143,47 +141,63 @@ class AdminController extends Controller
     public function updateRole(Request $request, User $user)
     {
         $request->validate([
-            'role' => 'required|in:Admin,Petugas,Pengguna',
+            'role' => ['required', Rule::in(self::ROLES)],
         ]);
+
+        // Admin tidak boleh mengubah role akunnya sendiri
+        if ($user->id === auth()->id()) {
+            return back()->withErrors(['role' => 'Kamu tidak bisa mengubah role akunmu sendiri.']);
+        }
 
         $user->update(['role' => $request->role]);
 
         return back()->with('success', 'Role pengguna ' . $user->name . ' berhasil diperbarui.');
     }
 
-    // app/Http/Controllers/AdminController.php
-
+    /**
+     * Tambah Akun Baru oleh Admin
+     */
     public function storeUser(Request $request)
-{
-    $request->validate([
-        'name'     => 'required|string|max:255',
-        'email'    => 'required|email|unique:users,email',
-        'password' => 'required|string|min:6',
-        'role'     => 'required|in:Admin,Petugas,Pengguna',
-    ]);
+    {
+        $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8',
+            'nim_nip'  => 'nullable|string|max:50',
+            'unit'     => 'nullable|string|max:100',
+            'role'     => ['required', Rule::in(self::ROLES)],
+        ]);
 
-    User::create([
-        'name'     => $request->name,
-        'email'    => $request->email,
-        'password' => $request->password, // Cukup berikan plain password, casts 'hashed' di User.php yang akan meng-hash secara otomatis
-        'nim_nip'  => $request->nim_nip,
-        'unit'     => $request->unit,
-        'role'     => $request->role,
-        'status'   => 'Aktif',
-    ]);
+        User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => $request->password, // Cukup berikan plain password, casts 'hashed' di User.php yang akan meng-hash secara otomatis
+            'nim_nip'  => $request->nim_nip,
+            'unit'     => $request->unit,
+            'role'     => $request->role,
+            'status'   => User::STATUS_ACTIVE,
+        ]);
 
-    return back()->with('success', 'Akun berhasil dibuat dan langsung bisa digunakan untuk login.');
-}
+        return back()->with('success', 'Akun berhasil dibuat dan langsung bisa digunakan untuk login.');
+    }
+
     /**
      * Toggle Status Akun (Aktif / Ditangguhkan)
      */
     public function toggleStatus(User $user)
     {
-        // Jika status saat ini 'Aktif', ubah jadi 'Ditangguhkan'. Jika tidak, ubah jadi 'Aktif'
-        $newStatus = ($user->status === 'Aktif') ? 'Ditangguhkan' : 'Aktif';
+        // Admin tidak boleh menangguhkan akunnya sendiri
+        if ($user->id === auth()->id()) {
+            return back()->withErrors(['status' => 'Kamu tidak bisa menangguhkan akunmu sendiri.']);
+        }
+
+        // Jika status saat ini 'active', ubah jadi 'suspended'. Jika tidak, ubah jadi 'active'
+        $newStatus = $user->isActive() ? User::STATUS_SUSPENDED : User::STATUS_ACTIVE;
         $user->update(['status' => $newStatus]);
 
-        return back()->with('success', 'Status akun ' . $user->name . ' berhasil diubah menjadi ' . $newStatus);
+        $label = $newStatus === User::STATUS_ACTIVE ? 'aktif' : 'ditangguhkan';
+
+        return back()->with('success', 'Status akun ' . $user->name . ' berhasil diubah menjadi ' . $label . '.');
     }
 
     /**
@@ -226,7 +240,7 @@ class AdminController extends Controller
         $query = Booking::whereYear('created_at', $year)
                         ->whereMonth('created_at', $month);
 
-        $totalSubmissions = (clone $query)->count();
+        $totalSubmissions    = (clone $query)->count();
         $approvedSubmissions = (clone $query)->where('status', 'approved')->count();
         $rejectedSubmissions = (clone $query)->where('status', 'rejected')->count();
 

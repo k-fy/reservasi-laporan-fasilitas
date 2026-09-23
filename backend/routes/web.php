@@ -24,7 +24,6 @@ Route::middleware('auth')->group(function () {
 });
 
 // Halaman kelola milik admin
-// Halaman kelola milik admin
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard'); 

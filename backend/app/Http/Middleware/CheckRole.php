@@ -17,7 +17,7 @@ class CheckRole
         }
 
         // 2. Jika akun ditangguhkan / nonaktif → logout & kembalikan ke login
-        if (strtolower(Auth::user()->status ?? 'aktif') !== 'aktif') {
+        if (strtolower(Auth::user()->status ?? 'active') !== 'active') {
             Auth::logout();
             return redirect()->route('login')->withErrors([
                 'email' => 'Akun Anda sedang ditangguhkan. Silakan hubungi Admin.',

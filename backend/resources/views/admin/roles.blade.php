@@ -65,7 +65,7 @@
                         </select>
                         <select name="status" onchange="this.form.submit()" class="px-3 py-1.5 text-xs border border-gray-200 rounded-xl bg-white text-gray-600 focus:outline-none cursor-pointer">
                             <option value="">All statuses</option>
-                            <option value="Aktif" {{ request('status') == 'Aktif' ? 'selected' : '' }}>Active</option>
+                            <option value="Active" {{ request('status') == 'Aktif' ? 'selected' : '' }}>Active</option>
                             <option value="Ditangguhkan" {{ request('status') == 'Ditangguhkan' ? 'selected' : '' }}>Suspended</option>
                         </select>
                     </form>
