@@ -24,12 +24,24 @@ Route::middleware('auth')->group(function () {
 });
 
 // Halaman kelola milik admin
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+// Halaman kelola milik admin
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard'); 
 
+    // Modify Roles Pages & Actions
     Route::get('/roles', [AdminController::class, 'roles'])->name('roles');
+    Route::post('/roles', [AdminController::class, 'storeUser'])->name('users.store');
+    Route::patch('/users/{user}/role', [AdminController::class, 'updateRole'])->name('users.update-role');
+    Route::patch('/users/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('users.toggle-status');
+
+    // Facilities Pages & Actions
     Route::get('/facilities', [AdminController::class, 'facilities'])->name('facilities');
+    Route::post('/facilities', [AdminController::class, 'storeFacility'])->name('facilities.store');
+    Route::put('/facilities/{facility}', [AdminController::class, 'updateFacility'])->name('facilities.update');
+    Route::patch('/facilities/{facility}/toggle-status', [AdminController::class, 'toggleFacilityStatus'])->name('facilities.toggle-status');
+
+    // Summary
     Route::get('/summary', [AdminController::class, 'summary'])->name('summary');
 });
 
