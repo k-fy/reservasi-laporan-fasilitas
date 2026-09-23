@@ -33,7 +33,7 @@ class DashboardController extends Controller
     {
         $pendingReservations = Reservation::where('status', 'pending')->count();
         $newReports          = Report::where('status', 'baru')->count();
-        $underRepair         = Facility::where('status', 'repair')->count();
+        $underRepair = Facility::where('status', 'maintenance')->count();
 
         $approvedBookings = Reservation::with('facility', 'user')
             ->where('status', 'approved')
