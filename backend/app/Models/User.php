@@ -13,11 +13,14 @@ use App\Models\Report;
 
 #[Fillable([
     'name',
+    'nim_nip',
     'email',
     'password',
     'phone',
     'role',
     'status',
+    'photo',
+    'bio',
 ])]
 
 #[Hidden(['password', 'remember_token'])]

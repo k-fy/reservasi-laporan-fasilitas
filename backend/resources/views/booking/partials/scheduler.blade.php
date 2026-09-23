@@ -74,10 +74,10 @@
             * Klik slot awal dan slot akhir untuk menentukan durasi sewa.
         </div>
 
-        <button type="submit" id="scheduler_submit" disabled
-                class="bg-[#814C5B] hover:bg-[#6b3e4b] text-white px-8 py-3 rounded-full font-bold text-sm shadow-md transition disabled:opacity-40 disabled:cursor-not-allowed">
+        <a id="reserve-btn" href="#"
+                class="bg-[#814C5B] hover:bg-[#6b3e4b] text-white px-8 py-3 rounded-full font-bold text-sm shadow-md transition disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed">
             Request a Booking
-        </button>
+        </a>
     </form>
 
 </div>
@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const inputDate = document.getElementById('input_date');
     const inputStart = document.getElementById('input_start_time');
     const inputEnd = document.getElementById('input_end_time');
-    const submitBtn = document.getElementById('scheduler_submit');
+    const reserveBtn = document.getElementById('reserve-btn');
     const summaryText = document.getElementById('scheduler_summary');
     const slotBtns = document.querySelectorAll('.slot-btn');
 
@@ -157,13 +157,58 @@ document.addEventListener('DOMContentLoaded', function () {
             inputStart.value = selectedStart;
             inputEnd.value = selectedEnd;
             inputDate.value = dateInput.value;
-            submitBtn.disabled = false;
+            reserveBtn.disabled = false;
             summaryText.innerText = `Terpilih: ${selectedStart} WIB - ${selectedEnd} WIB`;
+
+            const url = "{{ route('booking.reserve', $facility) }}"
+            + "?date=" + dateInput.value
+            + "&start_time=" + selectedStart
+            + "&end_time=" + selectedEnd;
+
+            reserveBtn.href = url;
+            reserveBtn.classList.remove('bg-[#814C5B]/40', 'pointer-events-none', 'cursor-not-allowed');
+            reserveBtn.classList.add('bg-[#814C5B]', 'hover:bg-[#6b3e4b]', 'cursor-pointer')
+
+            updateReserveBtn(dateInput.value, selectedStart, selectedEnd);
         } else if (selectedStart) {
-            submitBtn.disabled = true;
+            reserveBtn.disabled = true;
             summaryText.innerText = `Mulai: ${selectedStart} WIB (Pilih jam selesai)`;
+
+            reserveBtn.href = '#';
+            reserveBtn.classList.add('bg-[#814C5B]/40', 'pointer-events-none', 'cursor-not-allowed');
+            reserveBtn.classList.remove('bg-[#814C5B]', 'hover:bg-[#6b3e4b]', 'cursor-pointer');
         }
     }
+
+    dateInput.addEventListener('change', function () {
+        selectedStart = null;
+        selectedEnd   = null;
+        summaryText.innerText = 'Pick a date to see available time slots.';
+        reserveBtn.href = '#';
+        reserveBtn.classList.add('bg-[#814C5B]/40', 'pointer-events-none', 'cursor-not-allowed');
+        reserveBtn.classList.remove('bg-[#814C5B]', 'hover:bg-[#6b3e4b]', 'cursor-pointer');
+
+        fetch(`/booking/{{ $facility->id }}/booked-slots?date=${this.value}`)
+            .then(r => r.json())
+            .then(data => {
+                slotBtns.forEach(slot => {
+                    slot.classList.remove('bg-[#814C5B]', 'text-white', 'pointer-events-none', 'opacity-80', 'ring-2', 'ring-[#6b3e4b]');
+                    slot.classList.add('hover:bg-[#814C5B]/20', 'cursor-pointer');
+                    slot.querySelector('.slot-status-indicator').innerText = '';
+                });
+
+                data.forEach(b => {
+                    slotBtns.forEach(slot => {
+                        const t = slot.dataset.time;
+                        if (t >= b.start_time && t < b.end_time) {
+                            slot.classList.add('bg-[#814C5B]', 'text-white', 'pointer-events-none', 'opacity-80');
+                            slot.classList.remove('hover:bg-[#814C5B]/20', 'cursor-pointer');
+                            slot.querySelector('.slot-status-indicator').innerText = 'Booked';
+                        }
+                    });
+                });
+            });
+    });
 
 });
 </script>
