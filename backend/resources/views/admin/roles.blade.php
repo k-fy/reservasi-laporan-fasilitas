@@ -11,9 +11,17 @@
 
     @include('admin.components.header')
 
+    @php
+        use App\Models\User;
+
+        $roleLabels = [
+            User::ROLE_ADMIN    => 'Admin',
+            User::ROLE_PETUGAS  => 'Officer',
+            User::ROLE_PENGGUNA => 'User',
+        ];
+    @endphp
+
     <div class="flex flex-1">
-        <!-- Sidebar Navigation -->
-        <!-- Sidebar Navigation Baru (Tanpa Dashboard & Menggunakan Recap) -->
         <!-- Sidebar Navigation -->
         <aside class="w-64 bg-[#e2b8bc] text-[#4b3839] flex flex-col p-0 m-0 space-y-0 shadow-md">
             <a href="{{ route('admin.roles') }}" class="px-6 py-4 font-bold bg-[#5c4f50] text-white rounded-l-2xl text-center text-base">Accounts</a>
@@ -35,6 +43,7 @@
                 </div>
             @endif
 
+            <!-- Error Alert -->
             @if($errors->any())
                 <div class="mb-4 bg-rose-100 border border-rose-300 text-rose-800 text-xs px-4 py-2 rounded-xl">
                     <ul class="list-disc pl-4">
@@ -57,7 +66,7 @@
 
             <!-- Container Utama -->
             <div class="flex-1 bg-white rounded-b-2xl rounded-tr-2xl p-6 shadow-lg text-[#4b3839] min-h-[450px]">
-                
+
                 <!-- TAB 1: MANAGE ACCOUNTS -->
                 <div id="content-manage" class="tab-content">
                     <!-- Search & Filter Bar -->
@@ -68,10 +77,16 @@
                             </svg>
                             <input type="text" name="search" value="{{ request('search') }}" placeholder="Search name, email, or Student ID/NIP" class="w-full pl-9 pr-4 py-1.5 text-xs border border-gray-200 rounded-xl bg-white focus:outline-none focus:border-[#d98b92]">
                         </div>
+                        <select name="role" onchange="this.form.submit()" class="px-3 py-1.5 text-xs border border-gray-200 rounded-xl bg-white text-gray-600 focus:outline-none cursor-pointer">
+                            <option value="">All roles</option>
+                            @foreach($roleLabels as $value => $label)
+                                <option value="{{ $value }}" {{ request('role') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
                         <select name="status" onchange="this.form.submit()" class="px-3 py-1.5 text-xs border border-gray-200 rounded-xl bg-white text-gray-600 focus:outline-none cursor-pointer">
                             <option value="">All statuses</option>
-                            <option value="Active" {{ request('status') == 'Active' ? 'selected' : '' }}>Active</option>
-                            <option value="Suspended" {{ request('status') == 'Suspended' ? 'selected' : '' }}>Suspended</option>
+                            <option value="{{ User::STATUS_ACTIVE }}" {{ request('status') === User::STATUS_ACTIVE ? 'selected' : '' }}>Active</option>
+                            <option value="{{ User::STATUS_SUSPENDED }}" {{ request('status') === User::STATUS_SUSPENDED ? 'selected' : '' }}>Suspended</option>
                         </select>
                     </form>
 
@@ -82,7 +97,7 @@
                                 <tr>
                                     <th class="p-3 text-left">Name</th>
                                     <th class="p-3 text-left">Campus email</th>
-                                    <th class="p-3 text-left">Role</th> <!-- Tambahkan ini -->
+                                    <th class="p-3 text-left">Role</th>
                                     <th class="p-3 text-left">Unit</th>
                                     <th class="p-3 text-left">Status</th>
                                     <th class="p-3 text-left">Last active</th>
@@ -90,93 +105,104 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white">
-                                @foreach ($users as $user)
-                                <tr class="hover:bg-gray-50 transition">
-                                    <!-- 1. Name -->
-                                    <td class="p-3 font-semibold text-gray-800">{{ $user->name }}</td>
-                                    
-                                    <!-- 2. Campus email -->
-                                    <td class="p-3 text-gray-600">{{ $user->email }}</td>
-                                    
-                                    <!-- 3. Role (Tampilkan $user->role) -->
-                                    <td class="p-3">
-                                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-semibold {{ strtolower($user->role ?? '') === 'petugas' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700' }}">
-                                            {{ ucfirst($user->role ?? 'Pengguna') }}
-                                        </span>
-                                    </td>
-                                    
-                                    <!-- 4. Unit (Tampilkan $user->unit) -->
-                                    <td class="p-3 text-gray-600">{{ $user->unit ?? '-' }}</td>
-                                    
-                                    <!-- 5. Status -->
-                                    <td class="p-3">
-                                        @if(in_array(strtolower($user->status ?? ''), ['active', 'aktif', '1']))
-                                            <span class="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-[10px] font-semibold">Active</span>
-                                        @else
-                                            <span class="bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded-full text-[10px] font-semibold">Suspended</span>
-                                        @endif
-                                    </td>
-                                    
-                                    <!-- 6. Last active -->
-                                    <td class="p-3 text-gray-500 text-xs">{{ $user->updated_at ? $user->updated_at->diffForHumans() : '-' }}</td>
-                                    
-                                    <!-- 7. Action -->
-                                    <td class="p-3">
-                                        @if (Auth::id() === $user->id)
-                                            <span class="text-xs text-gray-400 italic">Your account</span>
-                                        @else
-                                            <form action="{{ route('admin.users.toggle-status', $user->id) }}" method="POST" class="inline">
-                                                @csrf
-                                                @method('PATCH')
-                                                <button type="submit" 
-                                                        class="text-xs font-semibold hover:underline {{ in_array(strtolower($user->status ?? ''), ['active', 'aktif', '1']) ? 'text-rose-600' : 'text-emerald-600' }}">
-                                                    {{ in_array(strtolower($user->status ?? ''), ['active', 'aktif', '1']) ? 'Suspend' : 'Activate' }}
-                                                </button>
-                                            </form>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @endforeach
+                                @forelse($users as $user)
+                                    <tr class="hover:bg-gray-50 transition">
+                                        <!-- 1. Name -->
+                                        <td class="p-3 font-semibold text-gray-800">{{ $user->name }}</td>
+
+                                        <!-- 2. Campus email -->
+                                        <td class="p-3 text-gray-600">{{ $user->email }}</td>
+
+                                        <!-- 3. Role (dropdown ganti role, kecuali akun sendiri) -->
+                                        <td class="p-3">
+                                            @if(Auth::id() === $user->id)
+                                                <span class="bg-gray-100 px-2.5 py-1 rounded-lg text-[11px] font-medium text-gray-700">{{ $roleLabels[$user->role] ?? $user->role }}</span>
+                                            @else
+                                                <form action="{{ route('admin.users.update-role', $user->id) }}" method="POST">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <select name="role" onchange="this.form.submit()" class="bg-gray-100 border border-gray-200 rounded-lg px-2 py-1 text-[11px] font-medium text-gray-700 cursor-pointer">
+                                                        @foreach($roleLabels as $value => $label)
+                                                            <option value="{{ $value }}" {{ $user->role === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </form>
+                                            @endif
+                                        </td>
+
+                                        <!-- 4. Unit -->
+                                        <td class="p-3 text-gray-600">{{ $user->unit ?? '-' }}</td>
+
+                                        <!-- 5. Status -->
+                                        <td class="p-3">
+                                            @if($user->isActive())
+                                                <span class="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-[10px] font-semibold">Active</span>
+                                            @else
+                                                <span class="bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded-full text-[10px] font-semibold">Suspended</span>
+                                            @endif
+                                        </td>
+
+                                        <!-- 6. Last active -->
+                                        <td class="p-3 text-gray-500 text-xs">{{ $user->updated_at ? $user->updated_at->diffForHumans() : 'Just now' }}</td>
+
+                                        <!-- 7. Action -->
+                                        <td class="p-3">
+                                            @if(Auth::id() === $user->id)
+                                                <span class="text-xs text-gray-400 italic">Your account</span>
+                                            @else
+                                                <form action="{{ route('admin.users.toggle-status', $user->id) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <button type="submit"
+                                                            class="text-xs font-semibold hover:underline {{ $user->isActive() ? 'text-rose-600' : 'text-emerald-600' }}">
+                                                        {{ $user->isActive() ? 'Suspend' : 'Activate' }}
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="7" class="p-4 text-center text-gray-400">No users found.</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
+                    <p class="text-[11px] text-gray-500 italic">Role changes take effect on the user's next page load.</p>
                 </div>
 
-                <!-- TAB 2: ADD OFFICER ACCOUNT -->
+                <!-- TAB 2: ADD ACCOUNTS -->
                 <div id="content-add" class="tab-content hidden">
-                    <h2 class="font-bold text-sm text-[#3b2b2c]">Add new officer account</h2>
-                    <p class="text-xs text-gray-400 mb-6">Create account credentials for officers to access their dashboard.</p>
+                    <h2 class="font-bold text-sm text-[#3b2b2c]">Add officer, admin, or user account</h2>
+                    <p class="text-xs text-gray-400 mb-6">Create account credentials. The account is active immediately and can be used to log in.</p>
 
                     <form class="space-y-4 max-w-3xl" action="{{ route('admin.users.store') }}" method="POST">
                         @csrf
-                        
-                        <!-- Role otomatis di-set sebagai Petugas -->
-                        <input type="hidden" name="role" value="petugas">
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-gray-700">Full name</label>
-                                <input type="text" name="name" required placeholder="e.g. Bagus Tri Prakoso" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
+                                <input type="text" name="name" value="{{ old('name') }}" required placeholder="e.g. Bagus Tri Prakoso" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold mb-1 text-gray-700">Employee ID / NIP</label>
-                                <input type="text" name="nim_nip" placeholder="19870412 201004 1 002" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
+                                <label class="block text-xs font-semibold mb-1 text-gray-700">Student ID / Employee ID</label>
+                                <input type="text" name="nim_nip" value="{{ old('nim_nip') }}" placeholder="19870412 201004 1 002" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
                             </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-gray-700">Campus email</label>
-                                <input type="email" name="email" required placeholder="name@kampus.ac.id" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
-                                <span class="text-[10px] text-gray-400 mt-0.5 block">Only kampus.ac.id domains are accepted.</span>
+                                <input type="email" name="email" value="{{ old('email') }}" required placeholder="name@kampus.ac.id" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-gray-700">Temporary Password</label>
                                 <div class="relative">
-                                    <input type="password" id="temporary_password" name="password" required placeholder="Set default password" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 pr-10 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
-                                    
+                                    <input type="password" id="temporary_password" name="password" required minlength="8" placeholder="Min. 8 characters" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 pr-10 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none">
+
                                     <!-- Tombol Ikon Mata -->
-                                    <button type="button" onclick="togglePasswordVisibility()" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none">
+                                    <button type="button" onclick="togglePasswordVisibility()" aria-label="Show or hide password" class="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none">
                                         <!-- Ikon Mata Terbuka (Default) -->
                                         <svg id="eye-icon-show" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -184,7 +210,7 @@
                                         </svg>
                                         <!-- Ikon Mata Tertutup (Hidden) -->
                                         <svg id="eye-icon-hide" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858-5.908a10.02 10.02 0 013.98-.863c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21f-3-3m-3-3l-3-3m-2-2l-3-3" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                                         </svg>
                                     </button>
                                 </div>
@@ -193,7 +219,7 @@
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
-                        <!-- Placement Unit -->
+                            <!-- Placement Unit -->
                             <div>
                                 <label class="block text-xs font-semibold mb-1 text-gray-700">Placement unit</label>
                                 <select name="unit" class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none cursor-pointer">
@@ -204,19 +230,15 @@
                                 </select>
                             </div>
 
-                            <!-- Account Role (Sama persis styling & ukurannya) -->
+                            <!-- Account Role -->
                             <div>
-                                <label class="block text-xs font-semibold mb-1 text-gray-700">Account Role</label>
+                                <label class="block text-xs font-semibold mb-1 text-gray-700">Role</label>
                                 <select name="role" required class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none cursor-pointer">
-                                    <option value="petugas">Petugas (Officer)</option>
-                                    <option value="pengguna">Pengguna (Mahasiswa/Dosen/Staf)</option>
+                                    <option value="{{ User::ROLE_PETUGAS }}" {{ old('role') === User::ROLE_PETUGAS ? 'selected' : '' }}>Officer — manages schedules and approves bookings</option>
+                                    <option value="{{ User::ROLE_PENGGUNA }}" {{ old('role') === User::ROLE_PENGGUNA ? 'selected' : '' }}>User — books and utilizes campus facilities</option>
+                                    <option value="{{ User::ROLE_ADMIN }}" {{ old('role') === User::ROLE_ADMIN ? 'selected' : '' }}>Admin — has full system access</option>
                                 </select>
                             </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs font-semibold mb-1 text-gray-700">Note for recipient <span class="text-gray-400 font-normal">(optional)</span></label>
-                            <textarea name="notes" rows="3" placeholder="e.g. In charge of Main Hall schedule starting October 1st." class="w-full bg-[#f8f4f4] border-0 rounded-xl p-2.5 text-xs text-gray-700 focus:ring-1 focus:ring-pink-300 focus:outline-none resize-none"></textarea>
                         </div>
 
                         <div class="flex space-x-2 pt-2">
@@ -233,15 +255,19 @@
     <!-- Script Tab Switching -->
     <script>
         function switchTab(tabName) {
+            // Sembunyikan semua kontainer tab
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            
+
+            // Reset style semua button tab
             document.querySelectorAll('[id^="tab-"]').forEach(el => {
                 el.classList.remove('bg-white', 'font-bold');
                 el.classList.add('bg-[#ebd3d6]', 'font-medium');
             });
-            
+
+            // Tampilkan kontainer yang dipilih
             document.getElementById('content-' + tabName).classList.remove('hidden');
-            
+
+            // Highlight button tab yang aktif
             const activeTab = document.getElementById('tab-' + tabName);
             activeTab.classList.remove('bg-[#ebd3d6]', 'font-medium');
             activeTab.classList.add('bg-white', 'font-bold');
@@ -262,6 +288,11 @@
                 eyeHide.classList.add('hidden');
             }
         }
+
+        // Kalau ada error validasi dari form tambah akun, langsung buka tab "Add Account"
+        @if($errors->hasAny(['name', 'email', 'password', 'nim_nip', 'unit', 'role']))
+            switchTab('add');
+        @endif
     </script>
 
 </body>

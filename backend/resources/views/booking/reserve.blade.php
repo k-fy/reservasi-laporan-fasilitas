@@ -126,7 +126,7 @@
             You can track the <strong>status</strong> in your
             account profile or wait for updates via <strong>WhatsApp</strong>
         </p>
-        <a href="{{ route('dashboard') }}">
+        <a href="{{ route('profile.show') }}">
             <button class="w-full bg-[#FCF1F0] text-[#4b4848] font-['Georgia',serif] italic text-lg py-3 rounded-full underline hover:bg-white transition">
                 I understand!
             </button>

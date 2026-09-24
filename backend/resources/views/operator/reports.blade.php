@@ -11,6 +11,10 @@
         <div class="flash">{{ session('success') }}</div>
     @endif
 
+    @if ($errors->any())
+        <div class="flash">{{ $errors->first() }}</div>
+    @endif
+
     <div class="toolbar">
         @foreach (['baru' => 'New', 'diproses' => 'In Progress', 'selesai' => 'Resolved', 'ditolak' => 'Rejected'] as $value => $label)
             <a href="{{ request()->fullUrlWithQuery(['status' => $value]) }}"
@@ -56,11 +60,12 @@
                         @endif
                     </div>
 
+                    {{-- Tandai fasilitas dalam perbaikan / aktifkan kembali (user story 12) --}}
                     @if ($r->status === 'diproses' && $r->facility)
                         @php $fs = $r->facility->status; @endphp
                         <div class="foot" x-on:click.stop style="margin-top:8px;flex-wrap:wrap;gap:8px">
                             <span>Status fasilitas:
-                                <strong>{{ ['active'=>'Aktif','maintenance'=>'Dalam perbaikan','inactive'=>'Nonaktif'][$fs] ?? ucfirst($fs) }}</strong>
+                                <strong>{{ ['active' => 'Aktif', 'maintenance' => 'Dalam perbaikan', 'inactive' => 'Nonaktif'][$fs] ?? ucfirst($fs) }}</strong>
                             </span>
                             @if ($fs !== 'maintenance')
                                 <form method="POST" action="{{ route('petugas.facility-status.set', $r->facility) }}"
@@ -82,8 +87,8 @@
                     @endif
                 </div>
                 @php
-                    $badgeClass = ['baru'=>'new','diproses'=>'progress','selesai'=>'resolved','ditolak'=>'rejected'][$r->status] ?? 'new';
-                    $badgeLabel = ['baru'=>'New','diproses'=>'In Progress','selesai'=>'Resolved','ditolak'=>'Rejected'][$r->status] ?? ucfirst($r->status);
+                    $badgeClass = ['baru' => 'new', 'diproses' => 'progress', 'selesai' => 'resolved', 'ditolak' => 'rejected'][$r->status] ?? 'new';
+                    $badgeLabel = ['baru' => 'New', 'diproses' => 'In Progress', 'selesai' => 'Resolved', 'ditolak' => 'Rejected'][$r->status] ?? ucfirst($r->status);
                 @endphp
                 <span class="badge b-{{ $badgeClass }}">{{ $badgeLabel }}</span>
             </div>

@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Reservation; // <--- Add this line
-use App\Models\Report;      // <--- Add this line for Report (line 31)
-use App\Models\Facility;    // <--- Add this line for Facility (line 32)
+use App\Models\Reservation;
+use App\Models\Report;
+use App\Models\Facility;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -17,10 +17,10 @@ class DashboardController extends Controller
     public function index()
     {
         if (Auth::check()) {
-            if (Auth::user()->role === 'admin') {
+            if (Auth::user()->isAdmin()) {
                 return redirect()->route('dashboard.admin');
             }
-            if (Auth::user()->role === 'petugas') {
+            if (Auth::user()->isPetugas()) {
                 return redirect()->route('dashboard.petugas');
             }
         }
@@ -33,7 +33,7 @@ class DashboardController extends Controller
     {
         $pendingReservations = Reservation::where('status', 'pending')->count();
         $newReports          = Report::where('status', 'baru')->count();
-        $underRepair = Facility::where('status', 'maintenance')->count();
+        $underRepair         = Facility::where('status', 'maintenance')->count();
 
         $approvedBookings = Reservation::with('facility', 'user')
             ->where('status', 'approved')
@@ -52,7 +52,6 @@ class DashboardController extends Controller
 
     public function admin()
     {
-    
         return view('admin.dashboard');
     }
 }

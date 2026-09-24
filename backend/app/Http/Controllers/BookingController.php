@@ -68,7 +68,6 @@ class BookingController extends Controller
             : [];
 
         return view('booking.venue-details', [
-            'venue'         => $facility,
             'facility'      => $facility,
             'amenitiesList' => $amenitiesList,
             'bookedSlots'   => $booked,
@@ -99,6 +98,11 @@ class BookingController extends Controller
     {
         return view('booking.success');
     }
+
+    // public function success()
+    // {
+    //     return view('booking.success');
+    // }
 
     public function history()
     {
@@ -141,4 +145,5 @@ class BookingController extends Controller
 
         return view('booking.reserve', compact('facility', 'date', 'start_time', 'end_time'));
     }
+
 }
