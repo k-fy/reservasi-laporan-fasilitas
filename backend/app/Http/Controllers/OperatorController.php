@@ -94,7 +94,7 @@ class OperatorController extends Controller
             'status'        => 'rejected',
             'cancel_reason' => $validated['cancel_reason'],
             'processed_by'  => auth()->id(),
-    ]);
+        ]);
 
         return redirect()->route('petugas.reservations', ['status' => 'rejected'])
             ->with('success', 'Reservasi berhasil ditolak.');
@@ -116,10 +116,24 @@ class OperatorController extends Controller
     }
 
     /* ---------------- Reports ---------------- */
+    // Semua status laporan diambil dari konstanta di App\Models\Report,
+    // supaya tidak ada lagi beda 'baru' vs 'New' antara model dan controller.
 
     public function reports(Request $request)
     {
-        $status = $request->query('status', 'baru');
+        $allowed = [
+            Report::STATUS_NEW,
+            Report::STATUS_PROGRESS,
+            Report::STATUS_RESOLVED,
+            Report::STATUS_REJECTED,
+        ];
+
+        $status = $request->query('status', Report::STATUS_NEW);
+
+        // Status yang tidak dikenal (mis. link lama ?status=baru) dikembalikan ke "New"
+        if (! in_array($status, $allowed, true)) {
+            $status = Report::STATUS_NEW;
+        }
 
         $reports = Report::with('facility', 'user')
             ->where('status', $status)
@@ -145,7 +159,10 @@ class OperatorController extends Controller
 
     public function startReport(Report $report)
     {
-        $report->update(['status' => 'diproses']);
+        $report->update([
+            'status'     => Report::STATUS_PROGRESS,
+            'handled_by' => auth()->id(),
+        ]);
 
         return back()->with('success', 'Laporan dipindah ke In Progress.');
     }
@@ -157,12 +174,12 @@ class OperatorController extends Controller
         ]);
 
         $report->update([
-            'status'           => 'selesai',
+            'status'           => Report::STATUS_RESOLVED,
             'resolution_notes' => $validated['resolution_notes'],
             'handled_by'       => auth()->id(),
         ]);
 
-        return redirect()->route('petugas.reports', ['status' => 'selesai'])
+        return redirect()->route('petugas.reports', ['status' => Report::STATUS_RESOLVED])
             ->with('success', 'Laporan berhasil ditandai selesai.');
     }
 
@@ -173,12 +190,12 @@ class OperatorController extends Controller
         ]);
 
         $report->update([
-            'status'           => 'ditolak',
+            'status'           => Report::STATUS_REJECTED,
             'resolution_notes' => $validated['resolution_notes'],
             'handled_by'       => auth()->id(),
         ]);
 
-        return redirect()->route('petugas.reports', ['status' => 'ditolak'])
+        return redirect()->route('petugas.reports', ['status' => Report::STATUS_REJECTED])
             ->with('success', 'Laporan ditandai ditolak.');
     }
 
@@ -186,8 +203,9 @@ class OperatorController extends Controller
 
     public function facilityStatus(Request $request)
     {
+        // Laporan "terbuka" = belum selesai dan belum ditolak
         $facilities = Facility::withCount(['reports as open_reports_count' => function ($q) {
-                $q->where('status', '!=', 'selesai');
+                $q->whereNotIn('status', [Report::STATUS_RESOLVED, Report::STATUS_REJECTED]);
             }])
             ->when($request->filled('type'), fn ($q) => $q->where('type', $request->type))
             ->orderBy('name')

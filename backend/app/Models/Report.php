@@ -14,6 +14,7 @@ class Report extends Model
     public const STATUS_NEW = 'New';
     public const STATUS_PROGRESS = 'Progress';
     public const STATUS_RESOLVED = 'Resolved';
+    public const STATUS_REJECTED = 'Rejected';
 
     protected $fillable = [
         'user_id',

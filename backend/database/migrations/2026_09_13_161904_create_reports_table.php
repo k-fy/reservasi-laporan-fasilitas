@@ -21,7 +21,7 @@ return new class extends Migration
             $table->text('description');
             $table->string('photo')->nullable();
 
-            $table->string('status')->default('baru');
+            $table->string('status')->default('New');
             $table->text('resolution_notes')->nullable();
 
             $table->foreignId('handled_by')->nullable()->constrained('users');

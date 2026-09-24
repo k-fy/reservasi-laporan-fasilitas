@@ -3,6 +3,27 @@
 @section('title', 'Report Queue - Chloe')
 
 @section('content')
+@php
+    // Semua status diambil dari konstanta model, supaya sama dengan yang disimpan di database
+    $statusLabels = [
+        \App\Models\Report::STATUS_NEW      => 'New',
+        \App\Models\Report::STATUS_PROGRESS => 'In Progress',
+        \App\Models\Report::STATUS_RESOLVED => 'Resolved',
+        \App\Models\Report::STATUS_REJECTED => 'Rejected',
+    ];
+
+    // Nama class CSS badge (b-new, b-progress, dst.) tetap sama seperti sebelumnya
+    $badgeClasses = [
+        \App\Models\Report::STATUS_NEW      => 'new',
+        \App\Models\Report::STATUS_PROGRESS => 'progress',
+        \App\Models\Report::STATUS_RESOLVED => 'resolved',
+        \App\Models\Report::STATUS_REJECTED => 'rejected',
+    ];
+
+    // Tab yang sudah final: form catatan tidak ditampilkan
+    $closedStatuses = [\App\Models\Report::STATUS_RESOLVED, \App\Models\Report::STATUS_REJECTED];
+@endphp
+
 <div x-data="{ pick: null }">
     <h1>Report Queue</h1>
     <p class="sub">Review, update, and resolve facility reports</p>
@@ -16,7 +37,7 @@
     @endif
 
     <div class="toolbar">
-        @foreach (['baru' => 'New', 'diproses' => 'In Progress', 'selesai' => 'Resolved', 'ditolak' => 'Rejected'] as $value => $label)
+        @foreach ($statusLabels as $value => $label)
             <a href="{{ request()->fullUrlWithQuery(['status' => $value]) }}"
                class="chip" aria-pressed="{{ $status === $value ? 'true' : 'false' }}">{{ $label }}</a>
         @endforeach
@@ -52,7 +73,7 @@
                     </p>
                     <div class="foot">
                         <span>{{ $r->user->name ?? '-' }} · {{ $r->created_at->translatedFormat('d M Y') }}</span>
-                        @if ($r->status === 'baru')
+                        @if ($r->status === \App\Models\Report::STATUS_NEW)
                             <form method="POST" action="{{ route('petugas.reports.start', $r) }}" style="margin-left:auto" x-on:click.stop>
                                 @csrf
                                 <button type="submit" class="mini">Start</button>
@@ -61,7 +82,7 @@
                     </div>
 
                     {{-- Tandai fasilitas dalam perbaikan / aktifkan kembali (user story 12) --}}
-                    @if ($r->status === 'diproses' && $r->facility)
+                    @if ($r->status === \App\Models\Report::STATUS_PROGRESS && $r->facility)
                         @php $fs = $r->facility->status; @endphp
                         <div class="foot" x-on:click.stop style="margin-top:8px;flex-wrap:wrap;gap:8px">
                             <span>Status fasilitas:
@@ -87,8 +108,8 @@
                     @endif
                 </div>
                 @php
-                    $badgeClass = ['baru' => 'new', 'diproses' => 'progress', 'selesai' => 'resolved', 'ditolak' => 'rejected'][$r->status] ?? 'new';
-                    $badgeLabel = ['baru' => 'New', 'diproses' => 'In Progress', 'selesai' => 'Resolved', 'ditolak' => 'Rejected'][$r->status] ?? ucfirst($r->status);
+                    $badgeClass = $badgeClasses[$r->status] ?? 'new';
+                    $badgeLabel = $statusLabels[$r->status] ?? ucfirst($r->status);
                 @endphp
                 <span class="badge b-{{ $badgeClass }}">{{ $badgeLabel }}</span>
             </div>
@@ -97,7 +118,7 @@
         @endforelse
     </div>
 
-    @if (!in_array($status, ['selesai', 'ditolak']))
+    @if (!in_array($status, $closedStatuses, true))
         <section class="reason">
             <h3>Resolution / Rejection Notes</h3>
             <div class="target" x-text="pick ? 'Laporan terpilih #' + pick : 'Pilih satu laporan untuk menulis catatan penyelesaian atau alasan penolakan.'"></div>
