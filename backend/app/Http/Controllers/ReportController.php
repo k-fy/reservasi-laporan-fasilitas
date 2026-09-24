@@ -42,4 +42,14 @@ class ReportController extends Controller
             ->route('reports.create')
             ->with('success', 'Report berhasil dikirim!');
     }
+
+    public function history()
+    {
+        $reports = \App\Models\Report::where('user_id', auth()->id())
+                    ->with('facility')
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+
+        return view('reports.history', compact('reports'));
+    }
 }
