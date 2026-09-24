@@ -16,7 +16,7 @@ class StoreReservationRequest extends FormRequest
     {
         return [
             'facility_id'      => 'required|exists:facilities,id',
-            'reservation_date' => 'required|date|after_or_equal:today',
+            'reservation_date' => 'required|date|after_or_equal:' . now()->addDays(2)->toDateString(),
             'start_time'       => 'required|date_format:H:i',
             'end_time'         => 'required|date_format:H:i|after:start_time',
             'purpose'          => 'required|string|max:255',

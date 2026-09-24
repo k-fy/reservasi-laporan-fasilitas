@@ -29,7 +29,7 @@
                         <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/>
                     </svg>
                 </div>
-                <input type="date" id="booking_date" min="{{ now()->toDateString() }}" value="{{ request('date', now()->toDateString()) }}"
+                <input type="date" id="booking_date" min="{{ now()->addDays(2)->toDateString() }}" value="{{ now()->addDays(2)->toDateString() }}"
                     class="bg-white border-0 text-[#814C5B] font-semibold text-sm px-3 focus:ring-0 cursor-pointer">
             </div>
         </div>
@@ -66,7 +66,7 @@
     <form method="POST" action="{{ route('booking.store') }}" id="scheduler_form" class="mt-6 flex flex-wrap justify-between items-center gap-4">
         @csrf
         <input type="hidden" name="facility_id" value="{{ $venueId }}">
-        <input type="hidden" name="reservation_date" id="input_date" value="{{ request('date', now()->toDateString()) }}">
+        <input type="hidden" name="reservation_date" id="input_date" value="{{ request('date', now()->addDays(2)->toDateString()) }}">
         <input type="hidden" name="start_time" id="input_start_time">
         <input type="hidden" name="end_time" id="input_end_time">
 

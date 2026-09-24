@@ -94,11 +94,6 @@ class BookingController extends Controller
         ->with('end_time', $request->end_time);
     }
 
-    public function success()
-    {
-        return view('booking.success');
-    }
-
     // public function success()
     // {
     //     return view('booking.success');
