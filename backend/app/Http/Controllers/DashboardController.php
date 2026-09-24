@@ -32,7 +32,7 @@ class DashboardController extends Controller
     public function petugas()
     {
         $pendingReservations = Reservation::where('status', 'pending')->count();
-        $newReports          = Report::where('status', 'baru')->count();
+        $newReports          = Report::where('status', Report::STATUS_NEW)->count();
         $underRepair         = Facility::where('status', 'maintenance')->count();
 
         $approvedBookings = Reservation::with('facility', 'user')
