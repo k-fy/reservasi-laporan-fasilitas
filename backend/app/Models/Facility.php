@@ -16,12 +16,13 @@ class Facility extends Model
         'type',
         'location',
         'capacity',
+        'area',
         'description',
-        'amenities',        
-        'price_per_hour',  
-        'contact_phone',    
+        'amenities',        // daftar fasilitas yang disediakan, dipisah koma
+        'price_per_hour',
+        'contact_phone',
         'status',
-        'image',
+        'image',            // path foto di storage/app/public
     ];
 
     public function reports()

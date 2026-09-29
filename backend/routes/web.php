@@ -18,23 +18,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/petugas', [DashboardController::class, 'petugas'])
         ->middleware('role:petugas')->name('dashboard.petugas');
 
-    Route::get('/dashboard/admin', [DashboardController::class, 'admin'])
+    // Admin tidak punya dashboard sendiri: alamat lama ini selalu dilempar ke Accounts.
+    // Nama 'dashboard.admin' dipertahankan supaya kode lama yang masih memanggilnya tidak error.
+    Route::get('/dashboard/admin', fn () => redirect()->route('admin.accounts'))
         ->middleware('role:admin')->name('dashboard.admin');
 });
 
 // Halaman kelola milik admin
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    // /admin dan /admin/dashboard diarahkan ke halaman Recap
-    Route::get('/', function () {
-        return redirect()->route('admin.summary');
-    });
-    Route::get('/dashboard', function () {
-        return redirect()->route('admin.summary');
-    })->name('dashboard');
+    // /admin dan /admin/dashboard diarahkan ke halaman Accounts
+    Route::get('/', fn () => redirect()->route('admin.accounts'));
+    Route::get('/dashboard', fn () => redirect()->route('admin.accounts'))->name('dashboard');
 
     // Accounts
-    Route::get('/roles', [AdminController::class, 'roles'])->name('roles');
-    Route::post('/roles', [AdminController::class, 'storeUser'])->name('users.store');
+    Route::get('/accounts', [AdminController::class, 'accounts'])->name('accounts');
+    Route::post('/accounts', [AdminController::class, 'storeUser'])->name('users.store');
     Route::patch('/users/{user}/role', [AdminController::class, 'updateRole'])->name('users.update-role');
     Route::patch('/users/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('users.toggle-status');
 
@@ -45,8 +43,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/facilities/{facility}/toggle-status', [AdminController::class, 'toggleFacilityStatus'])->name('facilities.toggle-status');
 
     // Recap
-    Route::get('/recap', [AdminController::class, 'summary'])->name('summary');
-    Route::get('/recap/export', [AdminController::class, 'exportSummary'])->name('summary.export');
+    Route::get('/recap', [AdminController::class, 'recap'])->name('recap');
+    Route::get('/recap/export', [AdminController::class, 'exportRecap'])->name('recap.export');
 });
 
 // Profil akun (semua role yang sudah login)

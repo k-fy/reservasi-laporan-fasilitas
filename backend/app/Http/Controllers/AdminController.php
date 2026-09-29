@@ -8,50 +8,83 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
     private const ROLES = [User::ROLE_ADMIN, User::ROLE_PETUGAS, User::ROLE_PENGGUNA];
 
     /**
-     * Halaman Dashboard Admin
+     * Tipe fasilitas: nilai yang disimpan di database => label yang ditampilkan.
+     * Nilai disamakan dengan data yang sudah ada & halaman pengguna (mis. 'alat').
+     */
+    public const FACILITY_TYPES = [
+        'gedung'       => 'Gedung / Aula',
+        'ruangan'      => 'Ruangan / Kelas',
+        'lab'          => 'Laboratorium',
+        'area terbuka' => 'Area Terbuka / Lapangan',
+        'alat'         => 'Alat',
+    ];
+
+    public const FACILITY_STATUSES = ['active', 'maintenance', 'inactive'];
+
+    /**
+     * Dashboard Admin
+     * Tidak ada halaman dashboard terpisah; admin langsung diarahkan ke Accounts.
      */
     public function dashboard()
     {
-        // 1. Data Statistik Atas
-        $pendingBookingsCount = Booking::where('status', 'pending')->count();
-        $activeBookingsCount = Booking::where('status', 'approved')
-            ->whereDate('start_time', '<=', now())
-            ->whereDate('end_time', '>=', now())
-            ->count();
-        $totalFacilities = Facility::count();
-        $totalBookingsThisWeek = Booking::whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count();
+        return redirect()->route('admin.accounts');
+    }
 
-        // Persentase pemakaian fasilitas minggu ini (Contoh kalkulasi sederhana)
-        $facilityUsagePercent = $totalFacilities > 0
-            ? round(($activeBookingsCount / $totalFacilities) * 100)
-            : 0;
+    /**
+     * Aturan validasi form fasilitas (dipakai untuk tambah & ubah)
+     */
+    private function facilityRules(): array
+    {
+        return [
+            'name'           => 'required|string|max:255',
+            'type'           => ['required', Rule::in(array_keys(self::FACILITY_TYPES))],
+            'location'       => 'required|string|max:255',
+            'capacity'       => 'required|integer|min:0',
+            'area'           => 'nullable|string|max:100',
+            'description'    => 'nullable|string|max:2000',
+            'amenities'      => 'nullable|string|max:1000',
+            'price_per_hour' => 'nullable|integer|min:0',
+            'contact_phone'  => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
+            'status'         => ['required', Rule::in(self::FACILITY_STATUSES)],
+            'image'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ];
+    }
 
-        // 2. Permintaan Terbaru (Pending & Recent)
-        $recentBookings = Booking::with(['user', 'facility'])
-            ->latest()
-            ->take(5)
-            ->get();
+    /**
+     * Pesan validasi berbahasa Indonesia untuk form fasilitas
+     */
+    private function facilityMessages(): array
+    {
+        return [
+            'contact_phone.regex' => 'Nomor kontak hanya boleh berisi angka, spasi, tanda + atau -.',
+            'image.image'         => 'File foto harus berupa gambar.',
+            'image.max'           => 'Ukuran foto maksimal 2 MB.',
+        ];
+    }
 
-        // 3. Jadwal Hari Ini
-        $todaySchedules = Booking::with('facility')
-            ->whereDate('start_time', today())
-            ->orderBy('start_time', 'asc')
-            ->get();
+    /**
+     * Rapikan daftar fasilitas yang disediakan: "AC ,  Proyektor,,Wifi" -> "AC, Proyektor, Wifi"
+     */
+    private function normalizeAmenities(?string $amenities): ?string
+    {
+        if (blank($amenities)) {
+            return null;
+        }
 
-        return view('admin.dashboard', compact(
-            'pendingBookingsCount',
-            'activeBookingsCount',
-            'totalFacilities',
-            'facilityUsagePercent',
-            'recentBookings',
-            'todaySchedules'
-        ));
+        $items = collect(explode(',', $amenities))
+            ->map(fn ($item) => trim($item))
+            ->filter()
+            ->unique()
+            ->values();
+
+        return $items->isEmpty() ? null : $items->implode(', ');
     }
 
     /**
@@ -59,14 +92,12 @@ class AdminController extends Controller
      */
     public function storeFacility(Request $request)
     {
-        $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'type'        => 'required|string',
-            'location'    => 'nullable|string',
-            'capacity'    => 'required|integer|min:0',
-            'description' => 'nullable|string',
-            'status'      => 'required|in:active,maintenance,inactive',
-        ]);
+        $validated = $request->validate($this->facilityRules(), $this->facilityMessages());
+        $validated['amenities'] = $this->normalizeAmenities($validated['amenities'] ?? null);
+
+        if ($request->hasFile('image')) {
+            $validated['image'] = $request->file('image')->store('facilities', 'public');
+        }
 
         Facility::create($validated);
 
@@ -78,14 +109,19 @@ class AdminController extends Controller
      */
     public function updateFacility(Request $request, Facility $facility)
     {
-        $validated = $request->validate([
-            'name'        => 'required|string|max:255',
-            'type'        => 'required|string',
-            'location'    => 'nullable|string',
-            'capacity'    => 'required|integer|min:0',
-            'description' => 'nullable|string',
-            'status'      => 'required|in:active,maintenance,inactive',
-        ]);
+        $validated = $request->validate($this->facilityRules(), $this->facilityMessages());
+        $validated['amenities'] = $this->normalizeAmenities($validated['amenities'] ?? null);
+
+        if ($request->hasFile('image')) {
+            // Hapus foto lama agar storage tidak penuh
+            if ($facility->image) {
+                Storage::disk('public')->delete($facility->image);
+            }
+            $validated['image'] = $request->file('image')->store('facilities', 'public');
+        } else {
+            // Tidak upload foto baru -> foto lama tetap dipakai
+            unset($validated['image']);
+        }
 
         $facility->update($validated);
 
@@ -105,9 +141,9 @@ class AdminController extends Controller
     }
 
     /**
-     * Halaman Modify Roles (Kelola Akun)
+     * Halaman Accounts (Kelola Akun)
      */
-    public function roles(Request $request)
+    public function accounts(Request $request)
     {
         // Awal query ambil seluruh user
         $query = User::query();
@@ -115,29 +151,31 @@ class AdminController extends Controller
         // 1. Filter Pencarian (Search Name, Email, atau NIM/NIP)
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('nim_nip', 'like', "%{$search}%");
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('nim_nip', 'like', "%{$search}%");
             });
         }
 
-        // 2. Filter Status (Active / Suspended / Pending)
-        if ($request->filled('status')) {
-            if ($request->status === 'Active') {
-                $query->where('status', User::STATUS_ACTIVE);
-            } elseif ($request->status === 'Suspended') {
-                $query->where('status', User::STATUS_SUSPENDED);
-            } elseif ($request->status === 'Pending') {
-                // Tambahkan filter ini untuk melihat akun pendaftar baru
-                $query->where('status', 'pending'); // atau User::STATUS_INACTIVE
-            }
+        // 2. Filter Role
+        if ($request->filled('role') && in_array($request->role, self::ROLES, true)) {
+            $query->where('role', $request->role);
         }
 
-        // 3. Urutkan berdasarkan data yang paling baru ditambahkan
-        $users = $query->latest()->get(); 
+        // 3. Filter Status (Active / Suspended / Pending)
+        //    'pending' = akun hasil registrasi mandiri yang menunggu verifikasi admin
+        $pendingStatus = defined(User::class . '::STATUS_PENDING') ? User::STATUS_PENDING : 'pending';
+        $allowedStatuses = [User::STATUS_ACTIVE, User::STATUS_SUSPENDED, $pendingStatus];
 
-        return view('admin.roles', compact('users'));
+        if ($request->filled('status') && in_array($request->status, $allowedStatuses, true)) {
+            $query->where('status', $request->status);
+        }
+
+        // 4. Urutkan berdasarkan data yang paling baru ditambahkan
+        $users = $query->latest()->get();
+
+        return view('admin.accounts', compact('users'));
     }
 
     /**
@@ -226,13 +264,20 @@ class AdminController extends Controller
 
         $facilities = $query->latest()->get();
 
-        return view('admin.facilities', compact('facilities'));
+        // Daftar tipe & lokasi untuk filter dan form
+        $facilityTypes = self::FACILITY_TYPES;
+        $facilityLocations = Facility::whereNotNull('location')
+            ->distinct()
+            ->orderBy('location')
+            ->pluck('location');
+
+        return view('admin.facilities', compact('facilities', 'facilityTypes', 'facilityLocations'));
     }
 
     /**
-     * Halaman Recapitulation / Summary Reports
+     * Halaman Recap (Rekapitulasi Laporan)
      */
-    public function summary(Request $request)
+    public function recap(Request $request)
     {
         $selectedMonth = $request->input('month', date('Y-m')); // Format: YYYY-MM
         [$year, $month] = explode('-', $selectedMonth);
@@ -253,7 +298,7 @@ class AdminController extends Controller
             ->groupBy('location')
             ->get();
 
-        return view('admin.summary', compact(
+        return view('admin.recap', compact(
             'totalSubmissions',
             'approvedSubmissions',
             'rejectedSubmissions',
@@ -263,9 +308,9 @@ class AdminController extends Controller
         ));
     }
 
-    public function exportSummary(Request $request)
+    public function exportRecap(Request $request)
     {
-        $type = $request->query('type', 'csv'); 
+        $type = $request->query('type', 'csv');
         if ($type === 'csv') {
             return back()->with('success', 'Laporan berhasil diunduh sebagai CSV!');
         } elseif ($type === 'pdf') {
