@@ -163,14 +163,17 @@ class AdminController extends Controller
             $query->where('role', $request->role);
         }
 
-        // 3. Filter Status (Active / Suspended)
-        if ($request->filled('status') && in_array($request->status, [User::STATUS_ACTIVE, User::STATUS_SUSPENDED], true)) {
+        // 3. Filter Status (Active / Suspended / Pending)
+        //    'pending' = akun hasil registrasi mandiri yang menunggu verifikasi admin
+        $pendingStatus = defined(User::class . '::STATUS_PENDING') ? User::STATUS_PENDING : 'pending';
+        $allowedStatuses = [User::STATUS_ACTIVE, User::STATUS_SUSPENDED, $pendingStatus];
+
+        if ($request->filled('status') && in_array($request->status, $allowedStatuses, true)) {
             $query->where('status', $request->status);
         }
 
         // 4. Urutkan berdasarkan data yang paling baru ditambahkan
         $users = $query->latest()->get();
-        // Atau jika pakai pagination: $users = $query->latest()->paginate(10);
 
         return view('admin.accounts', compact('users'));
     }
