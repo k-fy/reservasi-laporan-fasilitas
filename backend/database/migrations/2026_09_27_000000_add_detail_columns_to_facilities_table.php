@@ -4,6 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Melengkapi kolom detail fasilitas yang ditampilkan di halaman pengguna.
+ * Setiap kolom hanya ditambahkan jika belum ada, jadi aman dijalankan
+ * walaupun sebagian kolom sudah dibuat di migration sebelumnya.
+ */
 return new class extends Migration
 {
     public function up(): void

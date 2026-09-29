@@ -3,20 +3,30 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Report;
+use App\Models\Reservation;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\View\View;
-use App\Models\Reservation;
 use Illuminate\Support\Facades\Storage;
-use App\Models\Report; 
+use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    public function show()
+    /**
+     * Halaman profil (riwayat reservasi & laporan) — khusus pengguna.
+     * Admin & petugas tidak punya halaman ini, jadi langsung diarahkan ke Edit Account.
+     */
+    public function show(): View|RedirectResponse
     {
         $user = Auth::user();
+
+        if ($user->role !== User::ROLE_PENGGUNA) {
+            return redirect()->route('profile.edit');
+        }
 
         $reservations = Reservation::where('user_id', $user->id)
             ->latest()
@@ -32,54 +42,70 @@ class ProfileController extends Controller
     }
 
     /**
-     * Display the user's profile form.
+     * Form Edit Account — tampilan (header & sidebar) disesuaikan dengan role.
      */
     public function edit(Request $request): View
     {
-        return view('profile.edit', ['user' => Auth::user()]);
+        $user = Auth::user();
+
+        $view = match ($user->role) {
+            User::ROLE_ADMIN   => 'admin.profile',
+            User::ROLE_PETUGAS => 'petugas.profile',
+            default            => 'profile.edit',
+        };
+
+        // Selama halaman petugas belum dibuat, pakai halaman pengguna dulu
+        if (! view()->exists($view)) {
+            $view = 'profile.edit';
+        }
+
+        return view($view, ['user' => $user]);
     }
 
     /**
-     * Update the user's profile information.
+     * Simpan perubahan profil.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-               $user = Auth::user();
+        $user = Auth::user();
 
-            $request->validate([
-                'name'    => 'required|string|max:255',
-                'nim_nip' => 'nullable|string|max:50',
-                'bio'     => 'nullable|string|max:500',
-                'photo'   => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-                'email'   => 'required|email|unique:users,email,' . $user->id,
-            ]);
+        $request->validate([
+            'name'    => 'required|string|max:255',
+            'nim_nip' => 'nullable|string|max:50',
+            'bio'     => 'nullable|string|max:500',
+            'photo'   => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'email'   => 'required|email|unique:users,email,' . $user->id,
+        ]);
 
-            $data = [
-                'name'    => $request->name,
-                'nim_nip' => $request->nim_nip,
-                'bio'     => $request->bio,
-                'email'   => $request->email,
-            ];
+        $data = [
+            'name'    => $request->name,
+            'nim_nip' => $request->nim_nip,
+            'bio'     => $request->bio,
+            'email'   => $request->email,
+        ];
 
-            if ($request->hasFile('photo')) {
-                if ($user->photo) {
-                    Storage::disk('public')->delete($user->photo);
-                }
-                $data['photo'] = $request->file('photo')->store('photos', 'public');
+        if ($request->hasFile('photo')) {
+            if ($user->photo) {
+                Storage::disk('public')->delete($user->photo);
             }
-
-            if ($request->filled('password')) {
-                $request->validate([
-                    'password'              => 'min:8',
-                    'password_confirmation' => 'required|same:password',
-                ]);
-                $data['password'] = Hash::make($request->password);
-            }
-
-            $user->update($data);
-
-            return redirect()->route('profile.show')->with('success', 'Profil berhasil diperbarui.');
+            $data['photo'] = $request->file('photo')->store('photos', 'public');
         }
+
+        if ($request->filled('password')) {
+            $request->validate([
+                'password'              => 'min:8',
+                'password_confirmation' => 'required|same:password',
+            ]);
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $user->update($data);
+
+        // Pengguna kembali ke halaman profilnya; admin & petugas tetap di halaman Edit Account
+        $route = $user->role === User::ROLE_PENGGUNA ? 'profile.show' : 'profile.edit';
+
+        return redirect()->route($route)->with('success', 'Profil berhasil diperbarui.');
+    }
 
     /**
      * Delete the user's account.
@@ -101,5 +127,4 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
-
 }
