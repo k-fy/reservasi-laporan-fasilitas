@@ -122,18 +122,20 @@ class AdminController extends Controller
             });
         }
 
-        // 2. Filter Status (Active / Suspended)
+        // 2. Filter Status (Active / Suspended / Pending)
         if ($request->filled('status')) {
             if ($request->status === 'Active') {
                 $query->where('status', User::STATUS_ACTIVE);
             } elseif ($request->status === 'Suspended') {
                 $query->where('status', User::STATUS_SUSPENDED);
+            } elseif ($request->status === 'Pending') {
+                // Tambahkan filter ini untuk melihat akun pendaftar baru
+                $query->where('status', 'pending'); // atau User::STATUS_INACTIVE
             }
         }
 
         // 3. Urutkan berdasarkan data yang paling baru ditambahkan
         $users = $query->latest()->get(); 
-        // Atau jika pakai pagination: $users = $query->latest()->paginate(10);
 
         return view('admin.roles', compact('users'));
     }
