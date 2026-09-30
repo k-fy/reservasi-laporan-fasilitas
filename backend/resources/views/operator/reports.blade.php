@@ -4,7 +4,6 @@
 
 @section('content')
 @php
-    // Semua status diambil dari konstanta model, supaya sama dengan yang disimpan di database
     $statusLabels = [
         \App\Models\Report::STATUS_NEW      => 'New',
         \App\Models\Report::STATUS_PROGRESS => 'In Progress',
@@ -12,19 +11,15 @@
         \App\Models\Report::STATUS_REJECTED => 'Rejected',
     ];
 
-    // Nama class CSS badge (b-new, b-progress, dst.) tetap sama seperti sebelumnya
     $badgeClasses = [
         \App\Models\Report::STATUS_NEW      => 'new',
         \App\Models\Report::STATUS_PROGRESS => 'progress',
         \App\Models\Report::STATUS_RESOLVED => 'resolved',
         \App\Models\Report::STATUS_REJECTED => 'rejected',
     ];
-
-    // Tab yang sudah final: form catatan tidak ditampilkan
-    $closedStatuses = [\App\Models\Report::STATUS_RESOLVED, \App\Models\Report::STATUS_REJECTED];
 @endphp
 
-<div x-data="{ pick: null }">
+<div x-data="{ pick: null, mode: null }">
     <h1>Report Queue</h1>
     <p class="sub">Review, update, and resolve facility reports</p>
 
@@ -57,8 +52,7 @@
 
     <div class="cards">
         @forelse ($reports as $r)
-            <div class="rc" :class="pick === {{ $r->id }} ? 'picked' : ''"
-                 x-on:click="pick = {{ $r->id }}" role="button" tabindex="0">
+            <div class="rc" :class="pick === {{ $r->id }} ? 'picked' : ''">
                 <div class="thumb">
                     @if ($r->photo)
                         <img src="{{ \Illuminate\Support\Facades\Storage::url($r->photo) }}" style="width:100%;height:100%;object-fit:cover">
@@ -73,38 +67,49 @@
                     </p>
                     <div class="foot">
                         <span>{{ $r->user->name ?? '-' }} · {{ $r->created_at->translatedFormat('d M Y') }}</span>
+
+                        {{-- Tab New: cuma tombol Start --}}
                         @if ($r->status === \App\Models\Report::STATUS_NEW)
-                            <form method="POST" action="{{ route('petugas.reports.start', $r) }}" style="margin-left:auto" x-on:click.stop>
+                            <form method="POST" action="{{ route('petugas.reports.start', $r) }}" style="margin-left:auto">
                                 @csrf
                                 <button type="submit" class="mini">Start</button>
                             </form>
                         @endif
                     </div>
 
-                    {{-- Tandai fasilitas dalam perbaikan / aktifkan kembali (user story 12) --}}
-                    @if ($r->status === \App\Models\Report::STATUS_PROGRESS && $r->facility)
-                        @php $fs = $r->facility->status; @endphp
-                        <div class="foot" x-on:click.stop style="margin-top:8px;flex-wrap:wrap;gap:8px">
-                            <span>Status fasilitas:
-                                <strong>{{ ['active' => 'Aktif', 'maintenance' => 'Dalam perbaikan', 'inactive' => 'Nonaktif'][$fs] ?? ucfirst($fs) }}</strong>
-                            </span>
-                            @if ($fs !== 'maintenance')
-                                <form method="POST" action="{{ route('petugas.facility-status.set', $r->facility) }}"
-                                      onsubmit="return confirm('Tandai fasilitas ini sebagai Dalam perbaikan?')">
-                                    @csrf
-                                    <input type="hidden" name="status" value="maintenance">
-                                    <button type="submit" class="mini no">Dalam perbaikan</button>
-                                </form>
-                            @endif
-                            @if ($fs !== 'active')
-                                <form method="POST" action="{{ route('petugas.facility-status.set', $r->facility) }}"
-                                      onsubmit="return confirm('Kembalikan fasilitas ini ke Aktif?')">
-                                    @csrf
-                                    <input type="hidden" name="status" value="active">
-                                    <button type="submit" class="mini go">Aktifkan</button>
-                                </form>
-                            @endif
+                    {{-- Tab In Progress: 2 tombol Resolved & Reject --}}
+                    @if ($r->status === \App\Models\Report::STATUS_PROGRESS)
+                        <div class="foot" style="margin-top:8px">
+                            <button type="button" class="mini go"
+                                x-on:click="pick = {{ $r->id }}; mode = 'resolve'">Resolved</button>
+                            <button type="button" class="mini no"
+                                x-on:click="pick = {{ $r->id }}; mode = 'reject'">Reject</button>
                         </div>
+
+                        @if ($r->facility)
+                            @php $fs = $r->facility->status; @endphp
+                            <div class="foot" style="margin-top:8px;flex-wrap:wrap;gap:8px">
+                                <span>Status fasilitas:
+                                    <strong>{{ ['active' => 'Aktif', 'maintenance' => 'Dalam perbaikan', 'inactive' => 'Nonaktif'][$fs] ?? ucfirst($fs) }}</strong>
+                                </span>
+                                @if ($fs !== 'maintenance')
+                                    <form method="POST" action="{{ route('petugas.facility-status.set', $r->facility) }}"
+                                          onsubmit="return confirm('Tandai fasilitas ini sebagai Dalam perbaikan?')">
+                                        @csrf
+                                        <input type="hidden" name="status" value="maintenance">
+                                        <button type="submit" class="mini no">Dalam perbaikan</button>
+                                    </form>
+                                @endif
+                                @if ($fs !== 'active')
+                                    <form method="POST" action="{{ route('petugas.facility-status.set', $r->facility) }}"
+                                          onsubmit="return confirm('Kembalikan fasilitas ini ke Aktif?')">
+                                        @csrf
+                                        <input type="hidden" name="status" value="active">
+                                        <button type="submit" class="mini go">Aktifkan</button>
+                                    </form>
+                                @endif
+                            </div>
+                        @endif
                     @endif
                 </div>
                 @php
@@ -118,20 +123,23 @@
         @endforelse
     </div>
 
-    @if (!in_array($status, $closedStatuses, true))
-        <section class="reason">
-            <h3>Resolution / Rejection Notes</h3>
-            <div class="target" x-text="pick ? 'Laporan terpilih #' + pick : 'Pilih satu laporan untuk menulis catatan penyelesaian atau alasan penolakan.'"></div>
-            <form method="POST" x-bind:action="pick ? ('/petugas/reports/' + pick + '/resolve') : '#'">
+    {{-- Panel Resolution Notes: cuma muncul di tab In Progress --}}
+    @if ($status === \App\Models\Report::STATUS_PROGRESS)
+        <section class="reason" x-show="pick" x-cloak x-transition>
+            <h3>Resolution Notes</h3>
+            <div class="target"
+                 x-text="mode === 'reject' ? 'Menolak laporan #' + pick : 'Menyelesaikan laporan #' + pick"></div>
+
+            <form method="POST"
+                  x-bind:action="pick ? ('/petugas/reports/' + pick + '/' + (mode === 'reject' ? 'reject' : 'resolve')) : '#'">
                 @csrf
-                <textarea name="resolution_notes" placeholder="Apa yang sudah diperbaiki, atau alasan penolakan?" x-bind:disabled="!pick" required></textarea>
+                <textarea name="resolution_notes"
+                    x-bind:placeholder="mode === 'reject' ? 'Alasan penolakan laporan ini' : 'Apa yang sudah diperbaiki?'"
+                    required></textarea>
                 <div class="btns">
-                    <button type="button" class="btn ghost" x-on:click="pick = null" x-bind:disabled="!pick">Cancel</button>
-                    <button type="submit" class="btn"
-                            style="background:#fff;color:#b2455a;box-shadow:inset 0 0 0 1.5px #b2455a"
-                            x-bind:formaction="pick ? ('/petugas/reports/' + pick + '/reject') : '#'"
-                            x-bind:disabled="!pick">Tolak</button>
-                    <button type="submit" class="btn main" x-bind:disabled="!pick">Save &amp; Resolved</button>
+                    <button type="button" class="btn ghost" x-on:click="pick = null; mode = null">Cancel</button>
+                    <button type="submit" class="btn main"
+                        x-text="mode === 'reject' ? 'Save & Reject' : 'Save & Resolved'"></button>
                 </div>
             </form>
         </section>
