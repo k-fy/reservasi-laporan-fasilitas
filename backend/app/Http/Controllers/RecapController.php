@@ -1,66 +1,63 @@
 <?php
 
 namespace App\Http\Controllers;
-use Symfony\Component\HttpFoundation\StreamedResponse;
-use Illuminate\Http\Request;
-use App\Models\Report;
+
 use App\Models\Facility;
+use App\Models\Report;
 use App\Models\Reservation;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
+/**
+ * Halaman Recap admin + export CSV / Excel / PDF.
+ * Data halaman dan file export dihitung dari SATU fungsi (recapData) agar selalu sama.
+ */
 class RecapController extends Controller
 {
+    /**
+     * Halaman Recap
+     */
+    public function index(Request $request)
+    {
+        return view('admin.recap', $this->recapData($this->selectedMonth($request)));
+    }
+
+    // Alias jika route memanggil method recap()
+    public function recap(Request $request)
+    {
+        return $this->index($request);
+    }
+
+    /**
+     * Export rekap bulan terpilih: ?type=csv|excel|pdf&month=YYYY-MM
+     */
     public function exportRecap(Request $request)
     {
-        $type = $request->get('type', 'csv'); // csv, pdf, excel
-        $selectedMonth = $request->get('month', date('Y-m'));
+        $type          = $request->get('type', 'csv');
+        $selectedMonth = $this->selectedMonth($request);
+        $data          = $this->recapData($selectedMonth);
 
-        try {
-            $parsedDate = Carbon::createFromFormat('Y-m', $selectedMonth);
-        } catch (\Exception $e) {
-            $parsedDate = Carbon::now();
-            $selectedMonth = $parsedDate->format('Y-m');
-        }
+        // Label periode berbahasa Indonesia untuk dokumen, mis. "Oktober 2026"
+        $monthLabel = Carbon::createFromFormat('Y-m', $selectedMonth)->locale('id')->translatedFormat('F Y');
+        $monthName  = str_replace(' ', '_', $monthLabel); // dipakai untuk nama file
+        $printedAt  = now()->locale('id')->translatedFormat('d F Y, H:i');
 
-        $year  = $parsedDate->year;
-        $month = $parsedDate->month;
-        $monthName = $parsedDate->translatedFormat('F_Y');
+        // Baris untuk file export: angka okupansi diformat "1,5%" & jam "3 jam"
+        $occupancyRows = collect($data['occupancyRows'])->map(fn ($row) => [
+            'location'   => $row['location'],
+            'facilities' => $row['facilities'],
+            'usage'      => $row['usage'],
+            'hours'      => rtrim(rtrim(number_format($row['hours'], 1, ',', '.'), '0'), ','),
+            'rate'       => number_format($row['rate'], 1, ',', '.') . '%',
+        ]);
+        $damageRows = collect($data['damageRows']);
 
-        // 1. Data Okupansi
-        $occupancyRows = \App\Models\Facility::withCount(['reservations' => function ($q) use ($year, $month) {
-            $q->whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->where('status', 'approved');
-        }])->get()->map(function ($facility) {
-            $usage = $facility->reservations_count ?? 0;
-            $hours = $usage * 3;
-            $rate  = min(100, round(($hours / 200) * 100));
-
-            return [
-                'location'   => $facility->name,
-                'facilities' => 1,
-                'usage'      => $usage,
-                'hours'      => $hours,
-                'rate'       => $rate . '%',
-            ];
-        });
-
-        // 2. Data Kerusakan
-        $damageReports = \App\Models\Report::with('facility')
-            ->whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->get();
-
-        $damageRows = $damageReports->groupBy(function ($report) {
-            return $report->facility ? $report->facility->name : 'Laporan Tanpa Fasilitas';
-        })->map(function ($group, $locationName) {
-            return [
-                'location'    => $locationName,
-                'total'       => $group->count(),
-                'in_progress' => $group->whereIn('status', [\App\Models\Report::STATUS_NEW, \App\Models\Report::STATUS_PROGRESS])->count(),
-                'resolved'    => $group->where('status', \App\Models\Report::STATUS_RESOLVED)->count(),
-            ];
-        });
+        $summary = [
+            'total'    => $data['totalSubmissions'],
+            'approved' => $data['approvedSubmissions'],
+            'rejected' => $data['rejectedSubmissions'],
+            'percent'  => $data['approvedPercent'] . '%',
+        ];
 
         // --- EKSPOR CSV ---
         if ($type === 'csv') {
@@ -70,13 +67,23 @@ class RecapController extends Controller
                 "Content-Disposition" => "attachment; filename={$fileName}",
                 "Pragma"              => "no-cache",
                 "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-                "Expires"             => "0"
+                "Expires"             => "0",
             ];
 
-            $callback = function () use ($occupancyRows, $damageRows) {
+            $callback = function () use ($occupancyRows, $damageRows, $summary, $monthLabel) {
                 $file = fopen('php://output', 'w');
-                // Add BOM for UTF-8 Excel support
+                // BOM agar huruf/simbol terbaca benar saat dibuka di Excel
                 fputs($file, "\xEF\xBB\xBF");
+
+                fputcsv($file, ['REKAPITULASI PENGGUNAAN DAN KERUSAKAN FASILITAS KAMPUS']);
+                fputcsv($file, ['Periode', $monthLabel]);
+                fputcsv($file, []);
+
+                // Ringkasan pengajuan
+                fputcsv($file, ['RINGKASAN PENGAJUAN RESERVASI']);
+                fputcsv($file, ['Total Pengajuan', 'Disetujui', 'Ditolak', 'Tingkat Persetujuan']);
+                fputcsv($file, [$summary['total'], $summary['approved'], $summary['rejected'], $summary['percent']]);
+                fputcsv($file, []);
 
                 // Section 1: Okupansi
                 fputcsv($file, ['REKAP OKUPANSI FASILITAS']);
@@ -84,12 +91,11 @@ class RecapController extends Controller
                 foreach ($occupancyRows as $row) {
                     fputcsv($file, [$row['location'], $row['facilities'], $row['usage'], $row['hours'], $row['rate']]);
                 }
-
-                fputcsv($file, []); // Baris kosong pembatas
+                fputcsv($file, []);
 
                 // Section 2: Kerusakan
                 fputcsv($file, ['REKAP FREKUENSI KERUSAKAN']);
-                fputcsv($file, ['Lokasi / Alat', 'Total Laporan', 'Sedang Diperbaiki', 'Selesai Diperbaiki']);
+                fputcsv($file, ['Lokasi / Alat', 'Total Laporan', 'Belum Selesai', 'Selesai Diperbaiki']);
                 foreach ($damageRows as $row) {
                     fputcsv($file, [$row['location'], $row['total'], $row['in_progress'], $row['resolved']]);
                 }
@@ -100,118 +106,162 @@ class RecapController extends Controller
             return response()->stream($callback, 200, $headers);
         }
 
-        // --- EKSPOR EXCEL (.xls HTML format) ---
+        $viewData = compact('occupancyRows', 'damageRows', 'monthName', 'monthLabel', 'summary', 'printedAt');
+
+        // --- EKSPOR EXCEL (.xls format HTML, tanpa paket tambahan) ---
         if ($type === 'excel') {
             $fileName = "recap_{$monthName}.xls";
             $headers = [
                 "Content-Type"        => "application/vnd.ms-excel",
                 "Content-Disposition" => "attachment; filename={$fileName}",
                 "Pragma"              => "no-cache",
-                "Expires"             => "0"
+                "Expires"             => "0",
             ];
 
-            $content = view('admin.exports.recap-excel', compact('occupancyRows', 'damageRows', 'monthName'))->render();
+            $content = view('admin.exports.recap-excel', $viewData)->render();
             return response($content, 200, $headers);
         }
 
         // --- EKSPOR PDF ---
         if ($type === 'pdf') {
-            // Jika menggunakan Dompdf (\Pdf::loadView) atau print HTML stream:
+            // Jika paket dompdf terpasang -> unduh file PDF
             if (class_exists(\Barryvdh\DomPDF\Facade\Pdf::class)) {
-                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.exports.recap-pdf', compact('occupancyRows', 'damageRows', 'monthName'));
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.exports.recap-pdf', $viewData);
                 return $pdf->download("recap_{$monthName}.pdf");
             }
 
-            // Fallback jika belum install package dompdf (Print-friendly HTML response)
-            return response()->view('admin.exports.recap-pdf', compact('occupancyRows', 'damageRows', 'monthName'));
+            // Fallback jika dompdf belum terpasang: tampilan siap cetak (Ctrl+P -> Save as PDF)
+            return response()->view('admin.exports.recap-pdf', $viewData);
         }
 
         return redirect()->back();
     }
-    public function index(Request $request)
+
+    /**
+     * Ambil bulan dari request (format YYYY-MM); jika tidak valid pakai bulan ini.
+     */
+    private function selectedMonth(Request $request): string
     {
-        // 1. Ambil filter bulan dari request (Format: YYYY-MM, contoh: "2026-10")
-        $selectedMonth = $request->get('month', date('Y-m'));
-        
+        $month = (string) $request->get('month', now()->format('Y-m'));
+
         try {
-            $parsedDate = Carbon::createFromFormat('Y-m', $selectedMonth);
+            return Carbon::createFromFormat('Y-m', $month)->format('Y-m');
         } catch (\Exception $e) {
-            $parsedDate = Carbon::now();
-            $selectedMonth = $parsedDate->format('Y-m');
+            return now()->format('Y-m');
+        }
+    }
+
+    /**
+     * Kunci pengelompokan rekap ("Lokasi atau Alat"):
+     * - alat      -> nama alatnya, mis. "Proyektor Portable Epson"
+     * - lainnya   -> nama gedung, mis. "Gedung A Lt. 3" -> "Gedung A"
+     */
+    private function recapGroupOf(?Facility $facility): string
+    {
+        if (! $facility) {
+            return 'Tanpa Lokasi';
         }
 
-        $year  = $parsedDate->year;
-        $month = $parsedDate->month;
+        return $facility->type === 'alat'
+            ? $facility->name
+            : $this->buildingOf($facility->location);
+    }
 
-        // 2. Data Kerusakan Riil dari Model Report
-        $damageReports = Report::with('facility')
-            ->whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->get();
+    /**
+     * Ambil nama gedung dari lokasi, mis. "Gedung A Lt. 3" -> "Gedung A",
+     * agar rekap dikelompokkan per gedung, bukan per lantai.
+     */
+    private function buildingOf(?string $location): string
+    {
+        $location = trim((string) $location);
+        if ($location === '') {
+            return 'Tanpa Lokasi';
+        }
 
-        $damageRows = $damageReports->groupBy(function ($report) {
-            return $report->facility ? $report->facility->name : 'Laporan Tanpa Fasilitas';
-        })->map(function ($group, $locationName) {
-            return [
-                'location'    => $locationName,
-                'total'       => $group->count(),
-                // Hitung status 'New' & 'Progress' sebagai Sedang Diperbaiki
-                'in_progress' => $group->whereIn('status', [Report::STATUS_NEW, Report::STATUS_PROGRESS])->count(),
-                // Hitung status 'Resolved' sebagai Selesai Diperbaiki
-                'resolved'    => $group->where('status', Report::STATUS_RESOLVED)->count(),
-            ];
-        })->values()->toArray();
+        return trim(preg_replace('/\s*-?\s*Lt\.?\s*\d+\s*$/i', '', $location)) ?: $location;
+    }
 
-        // 3. Data Okupansi Riil (Mengambil data dari Facility & Reservation)
-        $occupancyRows = Facility::withCount(['reservations' => function ($q) use ($year, $month) {
-            $q->whereYear('created_at', $year)
-              ->whereMonth('created_at', $month)
-              ->where('status', 'approved');
-        }])->get()->map(function ($facility) {
-            $usage = $facility->reservations_count ?? 0;
-            $hours = $usage * 3; // Rata-rata perkiraan 3 jam per reservasi
-            $rate  = min(100, round(($hours / 200) * 100)); // Persentase okupansi
+    /**
+     * Hitung data rekap untuk satu bulan (dipakai halaman Recap & export).
+     */
+    public function recapData(string $selectedMonth): array
+    {
+        $monthStart = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
+        $monthEnd   = $monthStart->copy()->endOfMonth();
 
-            return [
-                'location'   => $facility->name,
-                'facilities' => 1,
-                'usage'      => $usage,
-                'hours'      => $hours,
-                'rate'       => $rate,
-            ];
-        })->toArray();
+        // ---------- 1. Statistik pengajuan reservasi ----------
+        // Berdasarkan TANGGAL PEMAKAIAN (reservation_date), sama dengan tabel okupansi,
+        // sehingga kartu statistik dan tabel di bawahnya konsisten.
+        $submissions = Reservation::whereBetween('reservation_date', [$monthStart->toDateString(), $monthEnd->toDateString()]);
 
-        // 4. Hitung Statistik Card Bagian Atas
-        $totalSubmissions = Reservation::whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->count();
+        $totalSubmissions    = (clone $submissions)->count();
+        $approvedSubmissions = (clone $submissions)->where('status', 'approved')->count();
+        $rejectedSubmissions = (clone $submissions)->where('status', 'rejected')->count();
+        $approvedPercent     = $totalSubmissions > 0 ? round($approvedSubmissions / $totalSubmissions * 100) : 0;
 
-        $approvedSubmissions = Reservation::whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
+        // ---------- 2. Okupansi per gedung / alat (berdasarkan tanggal pemakaian) ----------
+        // Jam tersedia per fasilitas per hari = jam operasional 07.00–20.00 = 13 jam
+        $hoursPerDay = 13;
+        $daysInMonth = $monthStart->daysInMonth;
+
+        $facilities = Facility::where('status', '!=', 'inactive')->get(['id', 'name', 'type', 'location']);
+
+        $approvedReservations = Reservation::whereIn('facility_id', $facilities->pluck('id'))
             ->where('status', 'approved')
-            ->count();
+            ->whereBetween('reservation_date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->get(['facility_id', 'start_time', 'end_time']);
 
-        $rejectedSubmissions = Reservation::whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->where('status', 'rejected')
-            ->count();
+        $facilityGroup = $facilities->mapWithKeys(fn ($f) => [$f->id => $this->recapGroupOf($f)]);
 
-        $approvedPercent = $totalSubmissions > 0 ? round(($approvedSubmissions / $totalSubmissions) * 100) : 0;
-        // 5. Return View dengan Variabel Lengkap
-        return view('admin.recap', compact(
-            'selectedMonth',
-            'occupancyRows',
-            'damageRows',
+        $occupancyRows = $facilities
+            ->groupBy(fn ($f) => $facilityGroup[$f->id])
+            ->map(function ($group, $building) use ($approvedReservations, $hoursPerDay, $daysInMonth) {
+                $ids  = $group->pluck('id');
+                $used = $approvedReservations->whereIn('facility_id', $ids);
+
+                $hours = $used->sum(fn ($r) =>
+                    Carbon::parse($r->start_time)->diffInMinutes(Carbon::parse($r->end_time)) / 60
+                );
+
+                $availableHours = $group->count() * $hoursPerDay * $daysInMonth;
+
+                return [
+                    'location'   => $building,
+                    'facilities' => $group->count(),
+                    'usage'      => $used->count(),
+                    'hours'      => round($hours, 1),
+                    'rate'       => $availableHours > 0 ? round($hours / $availableHours * 100, 1) : 0,
+                ];
+            })
+            ->sortByDesc('hours')
+            ->values()
+            ->all();
+
+        // ---------- 3. Frekuensi kerusakan per gedung / alat (berdasarkan tanggal laporan) ----------
+        $reports = Report::with('facility:id,name,type,location')
+            ->whereBetween('created_at', [$monthStart, $monthEnd])
+            ->get(['id', 'facility_id', 'status']);
+
+        $damageRows = $reports
+            ->groupBy(fn ($r) => $this->recapGroupOf($r->facility))
+            ->map(fn ($group, $building) => [
+                'location'    => $building,
+                'total'       => $group->count(),
+                'in_progress' => $group->whereIn('status', [Report::STATUS_NEW, Report::STATUS_PROGRESS])->count(),
+                'resolved'    => $group->where('status', Report::STATUS_RESOLVED)->count(),
+            ])
+            ->sortByDesc('total')
+            ->values()
+            ->all();
+
+        return compact(
             'totalSubmissions',
             'approvedSubmissions',
             'rejectedSubmissions',
-            'approvedPercent'
-        ));
-    }
-
-    // Alias jika route kamu memanggil method recap()
-    public function recap(Request $request)
-    {
-        return $this->index($request);
+            'approvedPercent',
+            'occupancyRows',
+            'damageRows',
+            'selectedMonth'
+        );
     }
 }

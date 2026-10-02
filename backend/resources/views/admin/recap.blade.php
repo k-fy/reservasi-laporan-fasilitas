@@ -205,17 +205,17 @@
                             <p class="text-sm text-gray-500">Unduh rekap periode <span class="font-semibold text-[#4b3839]">{{ $monthLabel }}</span></p>
 
                             <div class="flex items-center gap-2">
-                                <a href="{{ route('admin.recap.export', ['type' => 'csv', 'month' => $selectedMonth]) }}"
+                                <a href="{{ route('admin.recap.export', ['type' => 'csv', 'month' => $selectedMonth]) }}" data-export="CSV"
                                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 text-[#4b3839] text-sm font-medium hover:bg-gray-50 transition">
                                     <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                     CSV
                                 </a>
-                                <a href="{{ route('admin.recap.export', ['type' => 'pdf', 'month' => $selectedMonth]) }}"
+                                <a href="{{ route('admin.recap.export', ['type' => 'pdf', 'month' => $selectedMonth]) }}" data-export="PDF"
                                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-gray-200 text-[#4b3839] text-sm font-medium hover:bg-gray-50 transition">
                                     <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                                     PDF
                                 </a>
-                                <a href="{{ route('admin.recap.export', ['type' => 'excel', 'month' => $selectedMonth]) }}"
+                                <a href="{{ route('admin.recap.export', ['type' => 'excel', 'month' => $selectedMonth]) }}" data-export="Excel"
                                    class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#86545e] text-white text-sm font-semibold hover:bg-[#6f4550] shadow transition">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                     Excel
@@ -227,6 +227,25 @@
                 </div>
             </div>
         </main>
+    </div>
+
+
+    <!-- Modal konfirmasi unduh -->
+    <div id="export-modal" class="hidden fixed inset-0 z-50 bg-black/50 items-center justify-center p-4">
+        <div class="bg-white text-[#4b3839] rounded-2xl p-7 w-full max-w-md shadow-xl">
+            <div class="w-12 h-12 rounded-full bg-[#f7eced] text-[#86545e] flex items-center justify-center mb-4">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            </div>
+            <h3 class="font-bold text-lg mb-1">Unduh rekap?</h3>
+            <p class="text-sm text-gray-600 mb-6">
+                Rekap periode <span class="font-semibold text-[#4b3839]">{{ $monthLabel }}</span>
+                akan diunduh dalam format <span id="export-format" class="font-semibold text-[#4b3839]"></span>.
+            </p>
+            <div class="flex justify-end gap-3">
+                <button type="button" id="export-cancel" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm font-medium transition">Batal</button>
+                <a id="export-confirm" href="#" class="px-6 py-2.5 bg-[#86545e] hover:bg-[#6f4550] text-white rounded-full text-sm font-semibold transition">Ya, unduh</a>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -261,6 +280,33 @@
             const hasRows = activeContent.querySelectorAll('.recap-row').length > 0;
             document.getElementById('no-match').classList.toggle('hidden', !(hasRows && visible === 0));
         }
+
+        // Konfirmasi sebelum mengunduh file rekap
+        (function () {
+            const modal   = document.getElementById('export-modal');
+            const format  = document.getElementById('export-format');
+            const confirm = document.getElementById('export-confirm');
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            document.querySelectorAll('a[data-export]').forEach(link => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    format.textContent = link.dataset.export;
+                    confirm.href = link.href;
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                });
+            });
+
+            confirm.addEventListener('click', () => setTimeout(closeModal, 300));
+            document.getElementById('export-cancel').addEventListener('click', closeModal);
+            modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
+            document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); });
+        })();
     </script>
 
 </body>
