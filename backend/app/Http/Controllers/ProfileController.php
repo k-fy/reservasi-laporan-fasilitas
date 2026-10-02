@@ -50,7 +50,7 @@ class ProfileController extends Controller
 
         $view = match ($user->role) {
             User::ROLE_ADMIN   => 'admin.profile',
-            User::ROLE_PETUGAS => 'petugas.profile',
+            User::ROLE_PETUGAS => 'operator.profile',
             default            => 'profile.edit',
         };
 
