@@ -13,9 +13,9 @@ use Illuminate\Support\Facades\Auth;
 class DashboardController extends Controller
 {
     /** Jam operasional & panjang slot (sesuai ketentuan tugas) */
-    private const OPEN_TIME    = '07:00';
-    private const CLOSE_TIME   = '20:00';
-    private const SLOT_MINUTES = 30;
+    public const OPEN_TIME    = '07:00';
+    public const CLOSE_TIME   = '20:00';
+    public const SLOT_MINUTES = 30;
 
     /** Booking hanya boleh dilakukan paling cepat H-2 (asumsi kelompok) */
     public const MIN_BOOKING_DAYS_AHEAD = 2;
