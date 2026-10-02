@@ -7,12 +7,16 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\OperatorController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\RecapController;
 
 Route::get('/', [DashboardController::class, 'index'])->name('home');
 
 // Home / Dashboard publik — pengunjung & pengguna sama-sama bisa lihat
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+// Cek ketersediaan fasilitas dari kotak "Availability Check" di beranda (publik, dibatasi 60x/menit)
+Route::get('/availability', [DashboardController::class, 'availability'])
+    ->middleware('throttle:60,1')
+    ->name('availability.check');
 
 // Dashboard khusus role — wajib login + role sesuai
 Route::middleware('auth')->group(function () {
@@ -44,8 +48,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/facilities/{facility}/toggle-status', [AdminController::class, 'toggleFacilityStatus'])->name('facilities.toggle-status');
 
     // Recap
-    Route::get('/recap', [RecapController::class, 'index'])->name('recap');
-    Route::get('/recap/export', [RecapController::class, 'exportRecap'])->name('recap.export');
+    Route::get('/recap', [AdminController::class, 'recap'])->name('recap');
+    Route::get('/recap/export', [AdminController::class, 'exportRecap'])->name('recap.export');
 });
 
 // Profil akun (semua role yang sudah login)

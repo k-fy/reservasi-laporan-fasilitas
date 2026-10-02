@@ -11,16 +11,18 @@
     @include('admin.components.header')
 
     @php
+        // Data dihitung otomatis oleh AdminController@recap dari tabel reservations & reports.
         // Default fallback agar tidak error "Undefined variable"
         $occupancyRows = $occupancyRows ?? [];
         $damageRows = $damageRows ?? [];
 
         // Label & warna tingkat okupansi
-        $occupancyLevel = function (int $rate) {
+        // (persentase jam terpakai dari total jam operasional sebulan, bisa desimal)
+        $occupancyLevel = function (float $rate) {
             return match (true) {
-                $rate >= 80 => ['Sangat Tinggi', 'bg-emerald-50 text-emerald-700', 'bg-emerald-500'],
-                $rate >= 60 => ['Tinggi',        'bg-emerald-50 text-emerald-700', 'bg-emerald-400'],
-                $rate >= 40 => ['Sedang',        'bg-amber-50 text-amber-700',     'bg-amber-400'],
+                $rate >= 60 => ['Sangat Tinggi', 'bg-emerald-50 text-emerald-700', 'bg-emerald-500'],
+                $rate >= 30 => ['Tinggi',        'bg-emerald-50 text-emerald-700', 'bg-emerald-400'],
+                $rate >= 10 => ['Sedang',        'bg-amber-50 text-amber-700',     'bg-amber-400'],
                 default     => ['Rendah',        'bg-rose-50 text-rose-700',       'bg-rose-400'],
             };
         };
@@ -129,13 +131,13 @@
                                                 <td class="px-5 py-4 font-semibold text-gray-800">{{ $row['location'] }}</td>
                                                 <td class="px-5 py-4 text-gray-600">{{ $row['facilities'] }} fasilitas</td>
                                                 <td class="px-5 py-4 text-gray-600">{{ $row['usage'] }} kali</td>
-                                                <td class="px-5 py-4 text-gray-600">{{ $row['hours'] }} jam</td>
+                                                <td class="px-5 py-4 text-gray-600">{{ rtrim(rtrim(number_format($row['hours'], 1, ',', '.'), '0'), ',') }} jam</td>
                                                 <td class="px-5 py-4 min-w-[160px]">
                                                     <div class="flex items-center gap-3">
                                                         <div class="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                                            <div class="h-full {{ $bar }} rounded-full" style="width: {{ $row['rate'] }}%"></div>
+                                                            <div class="h-full {{ $bar }} rounded-full" style="width: {{ min($row['rate'], 100) }}%"></div>
                                                         </div>
-                                                        <span class="font-semibold text-gray-700 w-10 text-right">{{ $row['rate'] }}%</span>
+                                                        <span class="font-semibold text-gray-700 w-14 text-right">{{ number_format($row['rate'], 1, ',', '.') }}%</span>
                                                     </div>
                                                 </td>
                                                 <td class="px-5 py-4">
@@ -148,6 +150,9 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <p class="text-xs text-gray-500 italic mt-3">
+                                Tingkat okupansi = total jam terpakai (reservasi disetujui) ÷ total jam operasional fasilitas tersebut selama sebulan (13 jam × jumlah hari). Alat dihitung per alat, fasilitas lain per gedung.
+                            </p>
                         </div>
 
                         <!-- TAB 2: KERUSAKAN -->
@@ -158,7 +163,7 @@
                                         <tr>
                                             <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Lokasi atau Alat</th>
                                             <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Total Laporan</th>
-                                            <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Sedang Diperbaiki</th>
+                                            <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Belum Selesai</th>
                                             <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Selesai Diperbaiki</th>
                                             <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Tingkat Kerusakan</th>
                                         </tr>

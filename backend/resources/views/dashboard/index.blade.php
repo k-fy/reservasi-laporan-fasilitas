@@ -6,7 +6,7 @@
 
 <!-- HERO -->
 @php $heroBg = asset('images/hero.png'); @endphp
-<section class="relative min-h-[570px] bg-cover bg-center flex items-center justify-between px-[6%] py-[70px] text-white"
+<section class="relative min-h-[570px] bg-cover bg-center flex flex-wrap items-center justify-between gap-8 px-[6%] py-[70px] text-white"
          style="background-image: url('{{ $heroBg }}')">
 
     {{-- Overlay --}}
@@ -32,19 +32,37 @@
     </div>
 
     <!-- Availability Card -->
-    <div class="relative z-10 w-[365px] bg-[rgba(55,53,53,0.85)] border-2 border-[#f3d8d5] rounded-[25px] p-6 shadow-[0_0_8px_rgba(255,220,220,0.8)] text-left font-['Poppins',sans-serif]">
+    <div id="availability-card" class="relative z-10 w-[365px] max-w-full bg-[rgba(55,53,53,0.85)] border-2 border-[#f3d8d5] rounded-[25px] p-6 shadow-[0_0_8px_rgba(255,220,220,0.8)] text-left font-['Poppins',sans-serif]">
         <h2 class="font-bold text-[#FFF5F5] text-lg">Availability Check</h2>
         <div class="h-[2px] bg-[#F7D6D0] my-3 rounded"></div>
 
-        <form method="GET" action="{{ route('booking.index') }}">
-            <!-- Search Facility -->
-            <label class="block text-[13px] text-[#FFF5F5] mt-2 mb-1">Search Facility</label>
+        @php
+            // Slot tetap 30 menit dalam jam operasional 07.00–20.00
+            $timeOptions = [];
+            for ($i = 7; $i <= 19; $i++) {
+                $timeOptions[] = sprintf('%02d:00', $i);
+                $timeOptions[] = sprintf('%02d:30', $i);
+            }
+            $timeOptions[] = '20:00';
+        @endphp
+
+        {{-- Dikirim lewat JavaScript ke route availability.check; hasil tampil di bawah hero tanpa pindah halaman --}}
+        <form method="GET" action="{{ route('availability.check') }}" id="availability-form" novalidate autocomplete="off">
+
+            <input type="hidden" id="facility_id" name="facility_id">
+
+            <!-- Search Facility + saran -->
+            <label for="q" class="block text-[13px] text-[#FFF5F5] mt-2 mb-1">Search Facility</label>
             <div class="relative w-full">
-                <input type="text" name="q" value="{{ request('q') }}"
-                       class="w-full h-[38px] border-2 border-white rounded-xl bg-transparent text-[#FFF5F5] placeholder-[#FFF5F5] pl-3 pr-8 text-sm">
-                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[#FFF5F5] text-lg pointer-events-none">
-                    ⌕
-                </span>
+                <input type="text" id="q" name="q" maxlength="100"
+                       placeholder="Type, then pick a facility..."
+                       role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="facility-suggestions"
+                       class="w-full h-[38px] border-2 border-white rounded-xl bg-transparent text-[#FFF5F5] placeholder-[#FFF5F5]/60 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-[#f3d8d5]">
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[#FFF5F5] text-lg pointer-events-none">⌕</span>
+
+                <!-- Daftar saran fasilitas -->
+                <ul id="facility-suggestions" role="listbox"
+                    class="hidden absolute left-0 right-0 top-[calc(100%+6px)] z-30 max-h-64 overflow-y-auto bg-white text-[#4b4848] rounded-xl shadow-xl border border-[#f3d8d5] py-1"></ul>
             </div>
 
             <div class="bg-[#b9aaaa] text-white rounded-[10px] text-[13px] p-2.5 my-2 font-semibold">
@@ -52,32 +70,22 @@
             </div>
 
             <!-- Select Date -->
-            <label class="block text-[13px] text-[#FFF5F5] mt-2 mb-1">Select Date</label>
-            <input type="date" name="date"
-                   onclick="this.showPicker()"
-                   class="w-full h-[38px] border-2 border-white rounded-xl bg-transparent text-[#FFF5F5] px-2 text-sm cursor-pointer font-['Poppins',sans-serif]">
-
-            @php
-                $timeOptions = [];
-                for ($i = 7; $i <= 19; $i++) {
-                    $timeOptions[] = sprintf('%02d:00', $i);
-                    $timeOptions[] = sprintf('%02d:30', $i);
-                }
-                $timeOptions[] = '20:00';
-            @endphp
+            <label for="date" class="block text-[13px] text-[#FFF5F5] mt-2 mb-1">Select Date <span class="text-[#f3d8d5]">*</span></label>
+            <input type="date" id="date" name="date" required
+                   min="{{ now()->toDateString() }}"
+                   onclick="this.showPicker && this.showPicker()"
+                   class="w-full h-[38px] border-2 border-white rounded-xl bg-transparent text-[#FFF5F5] px-2 text-sm cursor-pointer font-['Poppins',sans-serif] focus:outline-none focus:ring-2 focus:ring-[#f3d8d5] [color-scheme:dark]">
 
             <div class="flex gap-3 mt-1">
                 <!-- Start Time -->
                 <div class="flex-1 flex flex-col">
-                    <label class="text-[13px] text-[#FFF5F5] mt-2 mb-1">Start Time</label>
+                    <label for="start_time" class="text-[13px] text-[#FFF5F5] mt-2 mb-1">Start Time <span class="text-[#f3d8d5]">*</span></label>
                     <select name="start_time" id="start_time" required
-                            class="w-full h-[38px] border-2 border-[#FFF5F5] rounded-xl bg-[#4b4848] text-[#FFF5F5] px-2 text-sm font-['Poppins',sans-serif]">
-                        <option value="" disabled selected></option>
+                            class="w-full h-[38px] border-2 border-[#FFF5F5] rounded-xl bg-[#4b4848] text-[#FFF5F5] px-2 text-sm font-['Poppins',sans-serif] focus:outline-none focus:ring-2 focus:ring-[#f3d8d5]">
+                        <option value="" disabled selected>--:--</option>
                         @foreach($timeOptions as $time)
                             @if($time !== '20:00')
-                                <option value="{{ $time }}" {{ request('start_time') == $time ? 'selected' : '' }}>
-                                    {{ $time }}
-                                </option>
+                                <option value="{{ $time }}">{{ $time }}</option>
                             @endif
                         @endforeach
                     </select>
@@ -85,28 +93,47 @@
 
                 <!-- End Time -->
                 <div class="flex-1 flex flex-col">
-                    <label class="text-[13px] text-[#FFF5F5] mt-2 mb-1">End Time</label>
+                    <label for="end_time" class="text-[13px] text-[#FFF5F5] mt-2 mb-1">End Time <span class="text-[#f3d8d5]">*</span></label>
                     <select name="end_time" id="end_time" required
-                            class="w-full h-[38px] border-2 border-[#FFF5F5] rounded-xl bg-[#4b4848] text-[#FFF5F5] px-2 text-sm font-['Poppins',sans-serif]">
-                        <option value="" disabled selected></option>
+                            class="w-full h-[38px] border-2 border-[#FFF5F5] rounded-xl bg-[#4b4848] text-[#FFF5F5] px-2 text-sm font-['Poppins',sans-serif] focus:outline-none focus:ring-2 focus:ring-[#f3d8d5]">
+                        <option value="" disabled selected>--:--</option>
                         @foreach($timeOptions as $time)
                             @if($time !== '07:00')
-                                <option value="{{ $time }}" {{ request('end_time') == $time ? 'selected' : '' }}>
-                                    {{ $time }}
-                                </option>
+                                <option value="{{ $time }}">{{ $time }}</option>
                             @endif
                         @endforeach
                     </select>
                 </div>
             </div>
 
-            <button type="submit"
-                    class="w-full mt-3 border-none rounded-[15px] bg-[#f3d8d5] py-2.5 text-base font-['Poppins',sans-serif] font-black text-[#4b4848] cursor-pointer">
+            <!-- Pesan error (validasi client & server) -->
+            <p id="availability-error" class="hidden mt-3 text-[13px] text-[#ffd1d1] bg-[#b2455a]/40 border border-[#ffd1d1]/40 rounded-lg px-3 py-2"></p>
+
+            <p class="mt-2 text-[11px] text-[#FFF5F5]/70">Operating hours 07:00–20:00, in 30-minute slots.</p>
+
+            <button type="submit" id="availability-submit"
+                    class="w-full mt-3 border-none rounded-[15px] bg-[#f3d8d5] hover:bg-white transition py-2.5 text-base font-['Poppins',sans-serif] font-black text-[#4b4848] cursor-pointer disabled:opacity-60 disabled:cursor-wait">
                 Check
             </button>
+
+            <!-- Hasil: Available / Not Available (tampil sebagai status, bukan tombol) -->
+            <div id="availability-result" class="hidden mt-4 pt-4 border-t border-[#FFF5F5]/20" aria-live="polite">
+                <div class="flex items-start gap-3">
+                    <span id="result-icon" class="w-9 h-9 rounded-full flex items-center justify-center shrink-0"></span>
+                    <div class="min-w-0">
+                        <p class="text-[10px] uppercase tracking-[0.15em] text-[#FFF5F5]/60">Status</p>
+                        <p id="result-title" class="text-[17px] font-bold leading-tight"></p>
+                        <p id="result-detail" class="mt-1 text-[12px] text-[#FFF5F5]/80 leading-relaxed"></p>
+                    </div>
+                </div>
+                <div id="result-action" class="mt-3"></div>
+            </div>
         </form>
     </div>
+
 </section>
+
+
 
 <!-- ANNOUNCEMENTS -->
 <section class="bg-[#4d4b4b] text-white px-[5%] py-[60px]">
@@ -247,37 +274,206 @@
 </section>
 
 <script>
-    const startSelect = document.getElementById('start_time');
-    const endSelect = document.getElementById('end_time');
+    (function () {
+        const facilities  = @json($facilitySuggestions ?? []);
+        const form        = document.getElementById('availability-form');
+        const searchInput = document.getElementById('q');
+        const suggestBox  = document.getElementById('facility-suggestions');
+        const dateInput   = document.getElementById('date');
+        const startSelect = document.getElementById('start_time');
+        const endSelect   = document.getElementById('end_time');
+        const errorBox    = document.getElementById('availability-error');
+        const submitBtn   = document.getElementById('availability-submit');
 
-    startSelect.addEventListener('change', function() {
-        const startVal = this.value;
-        if (!startVal) return;
+        const escapeHtml = (text) => String(text ?? '').replace(/[&<>"']/g, c => (
+            { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+        ));
 
-        Array.from(endSelect.options).forEach(option => {
-            if (option.value === "") return;
-            if (option.value <= startVal) {
-                option.disabled = true;
-                option.style.color = 'gray';
+        /* ================= 1. SARAN PENCARIAN ================= */
+        let activeIndex = -1;
+        let currentMatches = [];
+
+        function renderSuggestions() {
+            const keyword = searchInput.value.trim().toLowerCase();
+            currentMatches = facilities
+                .filter(f => !keyword || [f.name, f.type, f.location].join(' ').toLowerCase().includes(keyword))
+                .slice(0, 8);
+            activeIndex = -1;
+
+            if (!currentMatches.length) {
+                suggestBox.innerHTML = `<li class="px-4 py-3 text-sm text-gray-400">No matching facilities.</li>`;
             } else {
-                option.disabled = false;
-                option.style.color = 'white';
+                suggestBox.innerHTML = currentMatches.map((f, i) => `
+                    <li role="option" data-index="${i}"
+                        class="suggestion px-4 py-2.5 cursor-pointer hover:bg-[#fcf1f0]">
+                        <p class="text-sm font-semibold">${escapeHtml(f.name)}</p>
+                        <p class="text-xs text-gray-500">${escapeHtml(f.type)}${f.location ? ' · ' + escapeHtml(f.location) : ''}</p>
+                    </li>`).join('');
+            }
+            openSuggestions();
+        }
+
+        function openSuggestions()  { suggestBox.classList.remove('hidden'); searchInput.setAttribute('aria-expanded', 'true'); }
+        function closeSuggestions() { suggestBox.classList.add('hidden');    searchInput.setAttribute('aria-expanded', 'false'); }
+
+        function highlight(index) {
+            suggestBox.querySelectorAll('.suggestion').forEach((li, i) => {
+                li.classList.toggle('bg-[#fcf1f0]', i === index);
+                if (i === index) li.scrollIntoView({ block: 'nearest' });
+            });
+        }
+
+        const facilityIdInput = document.getElementById('facility_id');
+
+        function chooseSuggestion(index) {
+            const picked = currentMatches[index];
+            if (!picked) return;
+            searchInput.value = picked.name;
+            facilityIdInput.value = picked.id;
+            closeSuggestions();
+            hideResult();
+        }
+
+        searchInput.addEventListener('focus', renderSuggestions);
+        searchInput.addEventListener('input', () => {
+            facilityIdInput.value = '';   // ketik ulang = pilihan sebelumnya batal
+            hideResult();
+            renderSuggestions();
+        });
+        searchInput.addEventListener('keydown', (e) => {
+            if (suggestBox.classList.contains('hidden')) return;
+            if (e.key === 'ArrowDown') { e.preventDefault(); activeIndex = Math.min(activeIndex + 1, currentMatches.length - 1); highlight(activeIndex); }
+            if (e.key === 'ArrowUp')   { e.preventDefault(); activeIndex = Math.max(activeIndex - 1, 0); highlight(activeIndex); }
+            if (e.key === 'Enter' && activeIndex >= 0) { e.preventDefault(); chooseSuggestion(activeIndex); }
+            if (e.key === 'Escape') closeSuggestions();
+        });
+        // mousedown dipakai agar pilihan tercatat sebelum input kehilangan fokus
+        suggestBox.addEventListener('mousedown', (e) => {
+            const li = e.target.closest('.suggestion');
+            if (li) { e.preventDefault(); chooseSuggestion(Number(li.dataset.index)); }
+        });
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#facility-suggestions') && e.target !== searchInput) closeSuggestions();
+        });
+
+        /* ================= 2. JAM MULAI / SELESAI ================= */
+        function syncEndOptions() {
+            const startVal = startSelect.value;
+            Array.from(endSelect.options).forEach(option => {
+                if (option.value === '') return;
+                const disabled = startVal && option.value <= startVal;
+                option.disabled = disabled;
+                option.style.color = disabled ? 'gray' : 'white';
+            });
+            if (startVal && endSelect.value && endSelect.value <= startVal) {
+                const firstAvailable = Array.from(endSelect.options).find(opt => !opt.disabled && opt.value !== '');
+                endSelect.value = firstAvailable ? firstAvailable.value : '';
+            }
+        }
+
+        function showError(message) {
+            errorBox.textContent = message;
+            errorBox.classList.remove('hidden');
+        }
+        function hideError() { errorBox.classList.add('hidden'); }
+
+        startSelect.addEventListener('change', () => { syncEndOptions(); hideError(); });
+        [dateInput, startSelect, endSelect].forEach(el => el.addEventListener('change', () => { hideError(); hideResult(); }));
+
+        /* ================= 3. CEK KETERSEDIAAN ================= */
+        const resultBox    = document.getElementById('availability-result');
+        const resultIcon   = document.getElementById('result-icon');
+        const resultTitle  = document.getElementById('result-title');
+        const resultDetail = document.getElementById('result-detail');
+        const resultAction = document.getElementById('result-action');
+
+        const iconCheck = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>';
+        const iconCross = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>';
+
+        function hideResult() { resultBox.classList.add('hidden'); }
+
+        function renderResult(data) {
+            const f = data.results[0];
+            const when = `${data.date_label}, ${data.start_time}–${data.end_time}`;
+
+            if (f.status === 'available') {
+                resultIcon.className  = 'w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-[#b5d3b0] text-[#3f6b3b]';
+                resultIcon.innerHTML  = iconCheck;
+                resultTitle.className = 'text-[17px] font-bold leading-tight text-[#b5d3b0]';
+                resultTitle.textContent = 'Available';
+                resultDetail.innerHTML = `<span class="font-semibold text-white">${escapeHtml(f.name)}</span> is free on ${escapeHtml(when)}.`
+                    + (f.has_waiting ? '<br><span class="text-[#f3d8d5]">Another request is awaiting approval.</span>' : '');
+
+                resultAction.innerHTML = f.can_book
+                    ? `<a href="${escapeHtml(f.url)}" class="block w-full text-center rounded-[15px] bg-[#f3d8d5] hover:bg-white transition py-2 text-sm font-bold text-[#4b4848]">Book now →</a>`
+                    : `<p class="text-[11.5px] text-[#FFF5F5]/85 bg-[#FFF5F5]/10 border border-[#FFF5F5]/20 rounded-[10px] px-3 py-2 leading-relaxed">Bookings must be made at least 2 days in advance. For this time slot, you can book dates from <span class="font-semibold text-white">${escapeHtml(data.earliest_booking_label)}</span> onwards.</p>`;
+            } else {
+                resultIcon.className  = 'w-9 h-9 rounded-full flex items-center justify-center shrink-0 bg-[#e07a72] text-[#7a2222]';
+                resultIcon.innerHTML  = iconCross;
+                resultTitle.className = 'text-[17px] font-bold leading-tight text-[#f2a39c]';
+                resultTitle.textContent = 'Not Available';
+                resultDetail.innerHTML = `<span class="font-semibold text-white">${escapeHtml(f.name)}</span>: ${escapeHtml(f.label)} (${escapeHtml(when)}). Try another date or time.`;
+                resultAction.innerHTML = '';
+            }
+
+            resultBox.classList.remove('hidden');
+        }
+
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            closeSuggestions();
+            hideError();
+            hideResult();
+
+            // Validasi sisi client
+            const today = new Date().toLocaleDateString('en-CA'); // format YYYY-MM-DD sesuai zona waktu lokal
+            // Jika nama diketik persis tanpa klik saran, cocokkan otomatis
+            if (!facilityIdInput.value && searchInput.value.trim()) {
+                const exact = facilities.find(f => f.name.toLowerCase() === searchInput.value.trim().toLowerCase());
+                if (exact) facilityIdInput.value = exact.id;
+            }
+            if (!facilityIdInput.value)                return showError('Please pick a facility from the suggestions.');
+            if (!dateInput.value)                      return showError('Please select a date.');
+            if (dateInput.value < today)               return showError('The date cannot be earlier than today.');
+            if (!startSelect.value || !endSelect.value) return showError('Please select a start and end time.');
+            if (endSelect.value <= startSelect.value)  return showError('The end time must be later than the start time.');
+
+            const params = new URLSearchParams({
+                facility_id: facilityIdInput.value,
+                date: dateInput.value,
+                start_time: startSelect.value,
+                end_time: endSelect.value,
+            });
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Checking...';
+
+            try {
+                const response = await fetch(`${form.action}?${params}`, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // Pesan validasi dari server (422) atau error lain
+                    const firstError = data.errors ? Object.values(data.errors).flat()[0] : null;
+                    showError(firstError || data.message || 'Something went wrong. Please try again.');
+                    return;
+                }
+                if (!data.results.length) {
+                    showError('Facility not found or no longer active.');
+                    return;
+                }
+                renderResult(data);
+            } catch (err) {
+                showError('Could not reach the server. Check your connection and try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Check';
             }
         });
 
-        if (endSelect.value && endSelect.value <= startVal) {
-            const firstAvailable = Array.from(endSelect.options).find(opt => !opt.disabled && opt.value !== "");
-            if (firstAvailable) {
-                endSelect.value = firstAvailable.value;
-            } else {
-                endSelect.value = "";
-            }
-        }
-    });
-
-    if (startSelect.value) {
-        startSelect.dispatchEvent(new Event('change'));
-    }
+    })();
 </script>
 
 @endsection
