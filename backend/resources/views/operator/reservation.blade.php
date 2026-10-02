@@ -86,15 +86,15 @@
     </div>
 
     @if ($status !== 'rejected')
-        <section class="reason">
+        <section class="reason" x-show="pick" x-cloak x-transition>
             <h3>Cancellation / Rejection Reason</h3>
-            <div class="target" x-text="pick ? ((mode === 'cancel' ? 'Membatalkan' : 'Menolak') + ' reservasi #' + pick) : 'Pilih Reject atau Cancel pada salah satu reservasi untuk menulis alasan.'"></div>
+            <div class="target" x-text="(mode === 'cancel' ? 'Membatalkan' : 'Menolak') + ' reservasi #' + pick"></div>
             <form method="POST" x-bind:action="pick ? ('/petugas/reservations/' + pick + '/' + mode) : '#'">
                 @csrf
-                <textarea name="cancel_reason" placeholder="Tulis alasan yang akan dilihat pemohon" x-bind:disabled="!pick" required></textarea>
+                <textarea name="cancel_reason" placeholder="Tulis alasan yang akan dilihat pemohon" required></textarea>
                 <div class="btns">
-                    <button type="button" class="btn ghost" x-on:click="pick = null; mode = null" x-bind:disabled="!pick">Cancel</button>
-                    <button type="submit" class="btn main" x-bind:disabled="!pick">Confirm</button>
+                    <button type="button" class="btn ghost" x-on:click="pick = null; mode = null">Cancel</button>
+                    <button type="submit" class="btn main">Confirm</button>
                 </div>
             </form>
         </section>
