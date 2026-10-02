@@ -45,7 +45,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // Recap
     Route::get('/recap', [RecapController::class, 'index'])->name('recap');
-    Route::get('/recap/export', [AdminController::class, 'exportRecap'])->name('recap.export');
+    Route::get('/recap/export', [RecapController::class, 'exportRecap'])->name('recap.export');
 });
 
 // Profil akun (semua role yang sudah login)
