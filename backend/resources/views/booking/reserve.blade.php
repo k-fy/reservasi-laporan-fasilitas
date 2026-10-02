@@ -2,8 +2,10 @@
 @section('title', 'Reservation - Chloe')
 @section('content')
 
+
 <div class="min-h-screen bg-[#4A4A4A] flex items-center justify-center py-12 px-4">
     <div class="w-full max-w-xl bg-[#FCF1F0] rounded-3xl shadow-xl p-10">
+
 
         {{-- Title --}}
         <h1 class="text-center font-['Georgia',serif] italic text-4xl text-[#4b4848] mb-2">Reservation</h1>
@@ -18,6 +20,7 @@
                 </div>
             @endif
         </div>
+
 
         <div class="mb-6 space-y-2 text-sm text-[#4b4848] font-['Poppins',sans-serif]">
             <div class="flex justify-between">
@@ -40,6 +43,7 @@
             </div>
         </div>
 
+
         {{-- Form --}}
         <form method="POST" action="{{ route('booking.store') }}" class="space-y-4 font-['Poppins',sans-serif]">
             @csrf
@@ -47,6 +51,7 @@
             <input type="hidden" name="reservation_date" value="{{ $date }}">
             <input type="hidden" name="start_time"       value="{{ $start_time }}">
             <input type="hidden" name="end_time"         value="{{ $end_time }}">
+
 
             <div>
                 <label class="block text-sm font-semibold text-[#4b4848] mb-1">Requester Name</label>
@@ -58,6 +63,7 @@
                 @enderror
             </div>
 
+
             <div>
                 <label class="block text-sm font-semibold text-[#4b4848] mb-1">NIM/NIP</label>
                 <input type="text" name="nim_nip"
@@ -67,6 +73,7 @@
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
+
 
             <div>
                 <label class="block text-sm font-semibold text-[#4b4848] mb-1">Active WhatsApp Number</label>
@@ -78,6 +85,7 @@
                     <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                 @enderror
             </div>
+
 
             <div>
                 <label class="block text-sm font-semibold text-[#4b4848] mb-1">Purpose</label>
@@ -92,19 +100,23 @@
                 @enderror
             </div>
 
+
             <button type="submit"
                     class="w-full bg-[#c9a0a8] hover:bg-[#b8888f] text-white font-semibold py-3 rounded-full text-base transition cursor-pointer">
                 Apply for Booking
             </button>
         </form>
 
+
     </div>
 </div>
 
+
 @if(session('submitted'))
-<div x-data="{ show: false }" 
+<div x-data="{ show: false }"
      x-init="setTimeout(() => show = true, 50)"
     id="success-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+
 
     <div x-show="show"
          x-transition:enter="transition ease-out duration-300"
@@ -112,6 +124,7 @@
          x-transition:enter-end="opacity-100"
          class="absolute inset-0 bg-black/50">
     </div>
+
 
     <div x-show="show"
          x-transition:enter="transition ease-out duration-300"
@@ -135,4 +148,6 @@
 </div>
 @endif
 
+
 @endsection
+

@@ -2,8 +2,10 @@
 @section('title', 'Profile - Chloe')
 @section('content')
 
+
 <div class="min-h-screen bg-[#FCF1F0] px-8 py-10">
     <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
+
 
         {{-- KOLOM KIRI --}}
         <div>
@@ -20,7 +22,9 @@
                 </div>
             </div>
 
+
             <div class="border-b border-[#c9a0a8] mb-6"></div>
+
 
             @if(session('success'))
                 <div class="bg-green-100 text-green-700 rounded-xl px-4 py-2 mb-4 text-sm font-['Poppins',sans-serif]">
@@ -28,23 +32,25 @@
                 </div>
             @endif
 
+
             {{-- ACCOUNT --}}
             <div class="mb-6">
                 <h3 class="text-[#814C5B] font-bold text-sm mb-3 font-['Poppins',sans-serif] uppercase tracking-wide">Account</h3>
-                <a href="{{ route('profile.edit') }}" 
+                <a href="{{ route('profile.edit') }}"
                    class="block text-sm text-[#4b4848] hover:text-[#814C5B] py-2 font-['Poppins',sans-serif] transition">
                     Edit Profile
                 </a>
-                <a href="#" 
+                <a href="#"
                    class="block text-sm text-[#4b4848] hover:text-[#814C5B] py-2 font-['Poppins',sans-serif] transition">
                     Personalization
                 </a>
             </div>
 
+
             {{-- ACCESSIBILITY --}}
             <div class="mb-6">
                 <h3 class="text-[#814C5B] font-bold text-sm mb-3 font-['Poppins',sans-serif] uppercase tracking-wide">Accessibility</h3>
-                <a href="#" 
+                <a href="#"
                    class="block text-sm text-[#4b4848] hover:text-[#814C5B] py-2 font-['Poppins',sans-serif] transition">
                     Text Settings
                 </a>
@@ -59,14 +65,15 @@
                 </div>
             </div>
 
+
             {{-- PRIVACY --}}
             <div>
                 <h3 class="text-[#814C5B] font-bold text-sm mb-3 font-['Poppins',sans-serif] uppercase tracking-wide">Privacy</h3>
-                <a href="#" 
+                <a href="#"
                    class="block text-sm text-[#4b4848] hover:text-[#814C5B] py-2 font-['Poppins',sans-serif] transition">
                     Permissions
                 </a>
-                <a href="#" 
+                <a href="#"
                    class="block text-sm text-[#4b4848] hover:text-[#814C5B] py-2 font-['Poppins',sans-serif] transition">
                     Data Biometrics
                 </a>
@@ -76,7 +83,7 @@
                     @csrf
                     @method('DELETE')
                     <input type="hidden" name="password" value="confirm_delete">
-                    <button type="submit" 
+                    <button type="submit"
                             class="block text-sm font-bold text-[#814C5B] hover:text-red-600 py-2 font-['Poppins',sans-serif] transition">
                         Delete My Data
                     </button>
@@ -84,8 +91,10 @@
             </div>
         </div>
 
+
         {{-- KOLOM KANAN --}}
         <div class="space-y-5">
+
 
             {{-- RESERVATION WIDGET --}}
             <div class="bg-white rounded-2xl overflow-hidden border border-[#EDD3D6] shadow-sm">
@@ -123,6 +132,7 @@
                 </div>
             </div>
 
+
             {{-- REPORT STATUS WIDGET --}}
             <div class="bg-white rounded-2xl overflow-hidden border border-[#EDD3D6] shadow-sm">
                 <div class="bg-[#c9a0a8] px-5 py-3 flex justify-between items-center">
@@ -142,12 +152,12 @@
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="px-3 py-1 rounded-full text-xs font-semibold font-['Poppins',sans-serif]
-                                        @if(in_array(strtolower($report->status ?? ''), ['resolved', 'selesai'])) 
+                                        @if(in_array(strtolower($report->status ?? ''), ['resolved', 'selesai']))
                                             bg-green-100 text-green-700
-                                        @elseif(in_array(strtolower($report->status ?? ''), ['progress', 'diproses'])) 
+                                        @elseif(in_array(strtolower($report->status ?? ''), ['progress', 'diproses']))
                                             bg-[#814C5B] text-white
-                                        @else 
-                                            bg-yellow-100 text-yellow-700 
+                                        @else
+                                            bg-yellow-100 text-yellow-700
                                         @endif">
                                         @if(in_array(strtolower($report->status ?? ''), ['new', 'baru', 'pending']))
                                             New
@@ -169,8 +179,13 @@
                 </div>
             </div>
 
+
         </div>
     </div>
 </div>
 
+
 @endsection
+
+
+
