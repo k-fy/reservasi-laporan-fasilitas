@@ -7,6 +7,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\OperatorController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RecapController;
 
 Route::get('/', [DashboardController::class, 'index'])->name('home');
 
@@ -43,7 +44,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/facilities/{facility}/toggle-status', [AdminController::class, 'toggleFacilityStatus'])->name('facilities.toggle-status');
 
     // Recap
-    Route::get('/recap', [AdminController::class, 'recap'])->name('recap');
+    Route::get('/recap', [RecapController::class, 'index'])->name('recap');
     Route::get('/recap/export', [AdminController::class, 'exportRecap'])->name('recap.export');
 });
 
