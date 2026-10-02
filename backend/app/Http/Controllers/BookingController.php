@@ -60,6 +60,14 @@ class BookingController extends Controller
 
         $facilities = $query->paginate(9)->withQueryString();
 
+        if ($request->ajax()) {
+            return response()->json([
+                'html'         => view('booking.partials.facility-cards', compact('facilities'))->render(),
+                'pagination'   => $facilities->hasPages() ? (string) $facilities->links() : '',
+                'nothing_else' => $facilities->isNotEmpty() && $facilities->onLastPage(),
+            ]);
+        }
+
         return view('booking.index', compact('facilities'));
     }
 
