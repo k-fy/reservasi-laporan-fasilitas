@@ -1,9 +1,3 @@
-{{--
-    Form Edit Account — dipakai bersama oleh pengguna, petugas, dan admin.
-    Variabel:
-      $user       : user yang sedang login (wajib)
-      $cancelUrl  : tujuan tombol "Batal" (opsional, default ke halaman profil)
---}}
 @php
     $cancelUrl = $cancelUrl ?? route('profile.show');
 @endphp
@@ -35,14 +29,14 @@
         @method('PATCH')
 
         <div class="flex flex-col items-center gap-3 mb-4">
-            <div class="w-20 h-20 rounded-full bg-[#814C5B] overflow-hidden">
+            <div id="photo-preview" class="w-20 h-20 rounded-full bg-[#814C5B] overflow-hidden">
                 @if ($user->photo)
                     <img src="{{ asset('storage/'.$user->photo) }}" class="w-full h-full object-cover">
                 @endif
             </div>
             <label class="cursor-pointer text-sm text-[#814C5B] underline">
                 Ganti Foto
-                <input type="file" name="photo" accept="image/*" class="hidden">
+                <input type="file" name="photo" id="photo-input" accept="image/*" class="hidden">
             </label>
         </div>
 
@@ -95,3 +89,38 @@
     </form>
 
 </div>
+
+<script>
+document.getElementById('photo-input').addEventListener('change', async (e) => {
+    const input = e.target;
+    const file = input.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+
+    // pratinjau langsung dari file asli
+    const preview = document.getElementById('photo-preview');
+    preview.innerHTML = '';
+    const el = document.createElement('img');
+    el.src = URL.createObjectURL(file);
+    el.className = 'w-full h-full object-cover';
+    preview.appendChild(el);
+
+    // lalu kecilkan sebelum dikirim
+    try {
+        const img = await createImageBitmap(file);
+        const scale = Math.min(1, 800 / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+        if (!blob) return;
+
+        const dt = new DataTransfer();
+        dt.items.add(new File([blob], 'photo.jpg', { type: 'image/jpeg' }));
+        input.files = dt.files;
+    } catch (err) {
+        console.error('Resize foto gagal, file asli yang dikirim:', err);
+    }
+});
+</script>

@@ -60,7 +60,7 @@ class BookingController extends Controller
 
         $booked = Reservation::where('facility_id', $facility->id)
             ->where('reservation_date', $date)
-            ->whereIn('status', ['approved'])
+            ->where('status', ['approved'])
             ->get(['start_time', 'end_time']);
 
         $amenitiesList = $facility->amenities 
