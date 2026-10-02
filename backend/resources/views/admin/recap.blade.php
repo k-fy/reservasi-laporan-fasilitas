@@ -11,23 +11,9 @@
     @include('admin.components.header')
 
     @php
-        // ------------------------------------------------------------------
-        // Data tabel rekap.
-        // Jika controller sudah mengirim $occupancyRows / $damageRows, data asli yang dipakai.
-        // Jika belum, tabel memakai data contoh di bawah ini (SEMENTARA).
-        // ------------------------------------------------------------------
-        $occupancyRows = $occupancyRows ?? [
-            ['location' => 'Gedung Rektorat',           'facilities' => 12, 'usage' => 62, 'hours' => 186, 'rate' => 81],
-            ['location' => 'Gedung A - Fakultas Sains', 'facilities' => 18, 'usage' => 88, 'hours' => 220, 'rate' => 74],
-            ['location' => 'Gedung C - Laboratorium',   'facilities' => 10, 'usage' => 54, 'hours' => 125, 'rate' => 48],
-            ['location' => 'Kawasan Lapangan Luar',     'facilities' => 5,  'usage' => 24, 'hours' => 60,  'rate' => 31],
-        ];
-
-        $damageRows = $damageRows ?? [
-            ['location' => 'Gedung A - Fakultas Sains', 'total' => 14, 'in_progress' => 3, 'resolved' => 11],
-            ['location' => 'Gedung C - Laboratorium',   'total' => 8,  'in_progress' => 1, 'resolved' => 7],
-            ['location' => 'Gedung Rektorat',           'total' => 2,  'in_progress' => 0, 'resolved' => 2],
-        ];
+        // Default fallback agar tidak error "Undefined variable"
+        $occupancyRows = $occupancyRows ?? [];
+        $damageRows = $damageRows ?? [];
 
         // Label & warna tingkat okupansi
         $occupancyLevel = function (int $rate) {
@@ -63,7 +49,7 @@
                 <div class="flex flex-wrap items-end justify-between gap-4">
                     <div>
                         <h1 class="use-radley italic text-4xl text-[#fff5f5]">Recap</h1>
-                        <p class="text-sm text-[#d1c2c2] mt-1">Ringkasan pemakaian dan riwayat kerusakan fasilitas per lokasi.</p>
+                        <p class="text-sm text-[#d1c2c2] mt-1">Ringkasan okupansi dan frekuensi kerusakan fasilitas per lokasi/alat.</p>
                     </div>
 
                     <form method="GET" action="{{ route('admin.recap') }}" class="flex items-center gap-2">
@@ -73,7 +59,7 @@
                     </form>
                 </div>
 
-                <!-- Kartu Statistik Reservasi (data asli dari controller) -->
+                <!-- Kartu Statistik Reservasi -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-white rounded-2xl p-5 shadow-lg text-[#4b3839]">
                         <p class="text-sm text-gray-500">Total Pengajuan</p>
@@ -103,22 +89,22 @@
                     <!-- Tab Buttons -->
                     <div class="flex gap-2 items-end relative z-10">
                         <button onclick="switchTab('occupancy')" id="tab-occupancy" class="px-7 py-3 rounded-t-2xl bg-white text-[#4b3839] font-bold text-sm transition">
-                            Okupansi per Lokasi
+                            Okupansi
                         </button>
                         <button onclick="switchTab('damage')" id="tab-damage" class="px-7 py-3 rounded-t-2xl bg-[#ebd3d6] text-[#4b3839] font-medium text-sm transition hover:bg-[#f3e1e3]">
-                            Frekuensi Kerusakan per Lokasi
+                            Frekuensi Kerusakan
                         </button>
                     </div>
 
                     <!-- Kartu Putih Utama -->
                     <div class="bg-white rounded-b-2xl rounded-tr-2xl p-8 shadow-xl text-[#4b3839]">
 
-                        <!-- Pencarian lokasi (menyaring baris tabel secara langsung) -->
+                        <!-- Pencarian lokasi/alat -->
                         <div class="relative mb-6 max-w-md">
                             <svg class="w-5 h-5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
-                            <input type="text" id="location-search" oninput="filterRows(this.value)" placeholder="Cari nama lokasi..."
+                            <input type="text" id="location-search" oninput="filterRows(this.value)" placeholder="Cari lokasi atau alat..."
                                    class="w-full pl-11 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-[#fcf7f7] focus:outline-none focus:ring-2 focus:ring-[#e2b8bc] focus:border-transparent">
                         </div>
 
@@ -128,7 +114,7 @@
                                 <table class="w-full text-left text-sm">
                                     <thead class="bg-[#f7eced] text-[#86545e]">
                                         <tr>
-                                            <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Lokasi Gedung</th>
+                                            <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Lokasi atau Alat</th>
                                             <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Total Fasilitas</th>
                                             <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Total Pemakaian</th>
                                             <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Total Jam Terpakai</th>
@@ -170,7 +156,7 @@
                                 <table class="w-full text-left text-sm">
                                     <thead class="bg-[#f7eced] text-[#86545e]">
                                         <tr>
-                                            <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Lokasi Gedung</th>
+                                            <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Lokasi atau Alat</th>
                                             <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Total Laporan</th>
                                             <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Sedang Diperbaiki</th>
                                             <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Selesai Diperbaiki</th>
@@ -207,7 +193,7 @@
                             </div>
                         </div>
 
-                        <p id="no-match" class="hidden text-sm text-gray-400 text-center py-6">Tidak ada lokasi yang cocok dengan pencarian.</p>
+                        <p id="no-match" class="hidden text-sm text-gray-400 text-center py-6">Tidak ada lokasi/alat yang cocok dengan pencarian.</p>
 
                         <!-- Opsi Unduh -->
                         <div class="mt-8 pt-6 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
@@ -253,11 +239,9 @@
             activeTab.classList.remove('bg-[#ebd3d6]', 'font-medium');
             activeTab.classList.add('bg-white', 'font-bold');
 
-            // Terapkan ulang pencarian pada tab yang baru dibuka
             filterRows(document.getElementById('location-search').value);
         }
 
-        // Menyaring baris tabel pada tab yang sedang terbuka berdasarkan nama lokasi
         function filterRows(keyword) {
             const term = keyword.trim().toLowerCase();
             const activeContent = document.querySelector('.tab-content:not(.hidden)');
