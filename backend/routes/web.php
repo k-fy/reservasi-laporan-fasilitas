@@ -41,6 +41,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/accounts', [AdminController::class, 'storeUser'])->name('users.store');
     Route::patch('/users/{user}/role', [AdminController::class, 'updateRole'])->name('users.update-role');
     Route::patch('/users/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('users.toggle-status');
+    Route::patch('/users/{user}/verify', [AdminController::class, 'verifyUser'])->name('users.verify');
+    Route::patch('/users/{user}/reject', [AdminController::class, 'rejectUser'])->name('users.reject');
 
     // Facilities
     Route::get('/facilities', [AdminController::class, 'facilities'])->name('facilities');

@@ -19,6 +19,10 @@
             User::ROLE_PENGGUNA => 'User',
         ];
 
+        $statusPending  = \App\Http\Controllers\AdminController::STATUS_PENDING;
+        $statusRejected = \App\Http\Controllers\AdminController::STATUS_REJECTED;
+        $pendingCount   = $pendingCount ?? 0;
+
         // Warna badge per role
         $roleColors = [
             User::ROLE_ADMIN    => 'bg-[#5c4f50] text-white',
@@ -74,6 +78,17 @@
 
                     <!-- TAB 1: MANAGE ACCOUNTS -->
                     <div id="content-manage" class="tab-content">
+                        <!-- Pemberitahuan akun menunggu verifikasi -->
+                        @if($pendingCount > 0 && request('status') !== $statusPending)
+                            <div class="mb-5 flex flex-wrap items-center justify-between gap-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-xl">
+                                <span class="flex items-center gap-2">
+                                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span><span class="font-semibold">{{ $pendingCount }} akun</span> hasil registrasi mandiri menunggu verifikasi.</span>
+                                </span>
+                                <a href="{{ route('admin.accounts', ['status' => $statusPending]) }}" class="font-semibold underline hover:no-underline">Lihat sekarang</a>
+                            </div>
+                        @endif
+
                         <!-- Search & Filter Bar -->
                         <form method="GET" action="{{ route('admin.accounts') }}" class="flex flex-wrap gap-3 mb-6">
                             <div class="relative flex-1 min-w-[240px]">
@@ -93,6 +108,8 @@
                                 <option value="">All statuses</option>
                                 <option value="{{ User::STATUS_ACTIVE }}" {{ request('status') === User::STATUS_ACTIVE ? 'selected' : '' }}>Active</option>
                                 <option value="{{ User::STATUS_SUSPENDED }}" {{ request('status') === User::STATUS_SUSPENDED ? 'selected' : '' }}>Suspended</option>
+                                <option value="{{ $statusPending }}" {{ request('status') === $statusPending ? 'selected' : '' }}>Pending verification{{ $pendingCount ? " ($pendingCount)" : '' }}</option>
+                                <option value="{{ $statusRejected }}" {{ request('status') === $statusRejected ? 'selected' : '' }}>Rejected</option>
                             </select>
                         </form>
 
@@ -165,12 +182,20 @@
 
                                             <!-- 5. Status -->
                                             <td class="px-5 py-4">
-                                                @if($user->isActive())
-                                                    <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold">
+                                                @if($user->status === User::STATUS_ACTIVE)
+                                                    <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">
                                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
                                                     </span>
+                                                @elseif($user->status === $statusPending)
+                                                    <span class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pending
+                                                    </span>
+                                                @elseif($user->status === $statusRejected)
+                                                    <span class="inline-flex items-center gap-1.5 bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span> Rejected
+                                                    </span>
                                                 @else
-                                                    <span class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 px-3 py-1 rounded-full text-xs font-semibold">
+                                                    <span class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">
                                                         <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Suspended
                                                     </span>
                                                 @endif
@@ -183,8 +208,29 @@
                                             <td class="px-5 py-4 text-right">
                                                 @if(Auth::id() === $user->id)
                                                     <span class="text-sm text-gray-400 italic">Your account</span>
+                                                @elseif($user->status === $statusPending)
+                                                    {{-- Akun hasil registrasi mandiri: verifikasi atau tolak --}}
+                                                    <div class="inline-flex gap-2">
+                                                        <form action="{{ route('admin.users.verify', $user->id) }}" method="POST"
+                                                              onsubmit="return confirm('Verifikasi akun {{ addslashes($user->name) }}? Akun akan aktif dan bisa login.')">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <button type="submit" class="px-4 py-1.5 rounded-full text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition">
+                                                                Verify
+                                                            </button>
+                                                        </form>
+                                                        <form action="{{ route('admin.users.reject', $user->id) }}" method="POST"
+                                                              onsubmit="return confirm('Tolak pendaftaran akun {{ addslashes($user->name) }}? Akun tidak akan bisa login.')">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <button type="submit" class="px-4 py-1.5 rounded-full text-xs font-semibold border border-rose-200 text-rose-600 hover:bg-rose-50 transition">
+                                                                Reject
+                                                            </button>
+                                                        </form>
+                                                    </div>
                                                 @else
-                                                    <form action="{{ route('admin.users.toggle-status', $user->id) }}" method="POST" class="inline">
+                                                    <form action="{{ route('admin.users.toggle-status', $user->id) }}" method="POST" class="inline"
+                                                          onsubmit="return confirm('{{ $user->isActive() ? 'Tangguhkan' : 'Aktifkan' }} akun {{ addslashes($user->name) }}?')">
                                                         @csrf
                                                         @method('PATCH')
                                                         <button type="submit"
@@ -236,7 +282,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
                                     <label class="block text-sm font-semibold mb-1.5 text-gray-700">Campus email</label>
-                                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="name@kampus.ac.id"
+                                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="name@charm.ac.id"
                                            class="w-full bg-[#f8f4f4] border border-transparent rounded-xl px-4 py-3 text-sm text-gray-700 focus:bg-white focus:border-[#e2b8bc] focus:ring-2 focus:ring-[#e2b8bc]/50 focus:outline-none transition">
                                 </div>
                                 <div>

@@ -14,6 +14,14 @@ class AdminController extends Controller
     private const ROLES = [User::ROLE_ADMIN, User::ROLE_PETUGAS, User::ROLE_PENGGUNA];
 
     /**
+     * Status akun hasil registrasi mandiri:
+     * pending  = menunggu verifikasi admin (belum bisa login)
+     * rejected = ditolak admin (tidak bisa login)
+     */
+    public const STATUS_PENDING  = 'pending';
+    public const STATUS_REJECTED = 'rejected';
+
+    /**
      * Tipe fasilitas: nilai yang disimpan di database => label yang ditampilkan.
      * Nilai disamakan dengan data yang sudah ada & halaman pengguna (mis. 'alat').
      */
@@ -162,10 +170,8 @@ class AdminController extends Controller
             $query->where('role', $request->role);
         }
 
-        // 3. Filter Status (Active / Suspended / Pending)
-        //    'pending' = akun hasil registrasi mandiri yang menunggu verifikasi admin
-        $pendingStatus = defined(User::class . '::STATUS_PENDING') ? User::STATUS_PENDING : 'pending';
-        $allowedStatuses = [User::STATUS_ACTIVE, User::STATUS_SUSPENDED, $pendingStatus];
+        // 3. Filter Status (Active / Suspended / Pending / Rejected)
+        $allowedStatuses = [User::STATUS_ACTIVE, User::STATUS_SUSPENDED, self::STATUS_PENDING, self::STATUS_REJECTED];
 
         if ($request->filled('status') && in_array($request->status, $allowedStatuses, true)) {
             $query->where('status', $request->status);
@@ -174,7 +180,38 @@ class AdminController extends Controller
         // 4. Urutkan berdasarkan data yang paling baru ditambahkan
         $users = $query->latest()->get();
 
-        return view('admin.accounts', compact('users'));
+        // Jumlah akun yang menunggu verifikasi (untuk banner pemberitahuan)
+        $pendingCount = User::where('status', self::STATUS_PENDING)->count();
+
+        return view('admin.accounts', compact('users', 'pendingCount'));
+    }
+
+    /**
+     * Verifikasi akun hasil registrasi mandiri -> akun aktif dan bisa login
+     */
+    public function verifyUser(User $user)
+    {
+        if ($user->status !== self::STATUS_PENDING) {
+            return back()->withErrors(['status' => 'Akun ' . $user->name . ' tidak sedang menunggu verifikasi.']);
+        }
+
+        $user->update(['status' => User::STATUS_ACTIVE]);
+
+        return back()->with('success', 'Akun ' . $user->name . ' berhasil diverifikasi dan sekarang bisa login.');
+    }
+
+    /**
+     * Tolak akun hasil registrasi mandiri -> akun tidak bisa login
+     */
+    public function rejectUser(User $user)
+    {
+        if ($user->status !== self::STATUS_PENDING) {
+            return back()->withErrors(['status' => 'Akun ' . $user->name . ' tidak sedang menunggu verifikasi.']);
+        }
+
+        $user->update(['status' => self::STATUS_REJECTED]);
+
+        return back()->with('success', 'Pendaftaran akun ' . $user->name . ' ditolak.');
     }
 
     /**
