@@ -9,13 +9,42 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
+    /**
+     * Cookie preferensi tampilan: nama cookie => [nilai yang diizinkan, nilai default]
+     */
+    public const PREFERENCE_COOKIES = [
+        'chloe_text_size'       => [['small', 'normal', 'large'], 'normal'],
+        'chloe_animations'      => [['on', 'off'], 'on'],
+        'chloe_remember_search' => [['on', 'off'], 'on'],
+    ];
+
+    /** Cookie preferensi berlaku 1 tahun (dalam menit) */
+    private const PREFERENCE_LIFETIME = 60 * 24 * 365;
+
+    /**
+     * Ambil preferensi dari cookie; nilai tidak valid diganti default.
+     * Dipakai juga oleh layouts.app untuk menerapkan preferensi di setiap halaman.
+     */
+    public static function preferences(?Request $request = null): array
+    {
+        $request ??= request();
+        $prefs = [];
+
+        foreach (self::PREFERENCE_COOKIES as $name => [$allowed, $default]) {
+            $value = $request->cookie($name);
+            $prefs[$name] = in_array($value, $allowed, true) ? $value : $default;
+        }
+
+        return $prefs;
+    }
+
     /**
      * Halaman profil (riwayat reservasi & laporan) — khusus pengguna.
      * Admin & petugas tidak punya halaman ini, jadi langsung diarahkan ke Edit Account.
@@ -133,9 +162,51 @@ class ProfileController extends Controller
         return redirect('/')->with('success', 'Successfully deleted your account. All your reservations and reports have been removed.');
     }
 
-    public function personalization()
+    /**
+     * Halaman Personalization — preferensi tampilan disimpan di cookie.
+     */
+    public function personalization(Request $request)
     {
-        return view('profile.personalization', ['user' => Auth::user()]);
+        return view('profile.personalization', [
+            'user'  => Auth::user(),
+            'prefs' => self::preferences($request),
+        ]);
+    }
+
+    /**
+     * Simpan preferensi tampilan ke cookie (berlaku 1 tahun, terenkripsi otomatis oleh Laravel).
+     */
+    public function updatePersonalization(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'text_size'       => 'required|in:small,normal,large',
+            'animations'      => 'required|in:on,off',
+            'remember_search' => 'required|in:on,off',
+        ]);
+
+        Cookie::queue('chloe_text_size', $validated['text_size'], self::PREFERENCE_LIFETIME);
+        Cookie::queue('chloe_animations', $validated['animations'], self::PREFERENCE_LIFETIME);
+        Cookie::queue('chloe_remember_search', $validated['remember_search'], self::PREFERENCE_LIFETIME);
+
+        // Jika fitur "ingat pencarian" dimatikan, hapus juga pencarian terakhir yang tersimpan
+        if ($validated['remember_search'] === 'off') {
+            Cookie::queue(Cookie::forget('chloe_last_search'));
+        }
+
+        return redirect()->route('profile.personalization')->with('success', 'Preferensi tampilan berhasil disimpan.');
+    }
+
+    /**
+     * Kembalikan preferensi ke default dengan menghapus cookie-nya.
+     */
+    public function resetPersonalization(): RedirectResponse
+    {
+        foreach (array_keys(self::PREFERENCE_COOKIES) as $name) {
+            Cookie::queue(Cookie::forget($name));
+        }
+        Cookie::queue(Cookie::forget('chloe_last_search'));
+
+        return redirect()->route('profile.personalization')->with('success', 'Preferensi tampilan dikembalikan ke pengaturan awal.');
     }
 
     public function textSettings()

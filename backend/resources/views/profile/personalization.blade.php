@@ -2,32 +2,119 @@
 @section('title', 'Personalization - Chloe')
 @section('content')
 
+@php
+    $prefs = $prefs ?? \App\Http\Controllers\ProfileController::preferences();
+
+    $textSizes = [
+        'small'  => ['Kecil',  'text-sm'],
+        'normal' => ['Normal', 'text-base'],
+        'large'  => ['Besar',  'text-lg'],
+    ];
+@endphp
+
 <div class="min-h-screen bg-[#FCF1F0] px-8 py-10">
     <div class="max-w-5xl mx-auto flex gap-10">
 
         @include('profile.partials.sidebar')
 
         <div class="flex-1">
-            <div class="bg-white rounded-2xl border border-[#EDD3D6] shadow-sm p-8">
+            <div class="bg-white rounded-2xl border border-[#EDD3D6] shadow-sm p-8 font-['Poppins',sans-serif]">
 
-                <h2 class="text-xl font-bold text-[#4b4848] font-['Poppins',sans-serif] mb-1">Personalization</h2>
+                <h2 class="text-xl font-bold text-[#4b4848] mb-1">Personalization</h2>
+                <p class="text-sm text-[#9b7d84] mb-4">Atur tampilan aplikasi sesuai preferensimu. Pengaturan disimpan di browser ini.</p>
                 <div class="border-b border-[#EDD3D6] mb-8"></div>
 
-                <div class="flex flex-col items-center justify-center py-16 text-center">
-                    <div class="w-20 h-20 rounded-full bg-[#FCF1F0] border-2 border-[#EDD3D6] flex items-center justify-center mb-5">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-[#c9a0a8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                        </svg>
+                @if (session('success'))
+                    <div class="mb-6 flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3 rounded-xl">
+                        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        {{ session('success') }}
                     </div>
-                    <h3 class="text-base font-semibold text-[#4b4848] font-['Poppins',sans-serif] mb-2">Personalization</h3>
-                    <p class="text-sm text-[#9b7d84] font-['Poppins',sans-serif] max-w-xs leading-relaxed">
-                        Atur tema, bahasa, dan tampilan aplikasi sesuai preferensimu.
-                    </p>
-                    <span class="mt-6 inline-block bg-[#FCF1F0] border border-[#EDD3D6] text-[#c9a0a8] text-xs font-semibold px-4 py-2 rounded-full font-['Poppins',sans-serif]">
-                        Coming Soon
-                    </span>
-                </div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl">
+                        {{ $errors->first() }}
+                    </div>
+                @endif
+
+                <form method="POST" action="{{ route('profile.personalization.update') }}" class="space-y-8">
+                    @csrf
+
+                    {{-- ===== Ukuran tulisan ===== --}}
+                    <div>
+                        <h3 class="text-sm font-semibold text-[#4b4848]">Ukuran Tampilan</h3>
+                        <p class="text-xs text-[#9b7d84] mb-3">Memperbesar atau memperkecil tulisan dan tampilan di seluruh halaman.</p>
+
+                        <div class="grid grid-cols-3 gap-3 max-w-md">
+                            @foreach ($textSizes as $value => [$label, $sample])
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="text_size" value="{{ $value }}" class="peer sr-only"
+                                           {{ $prefs['chloe_text_size'] === $value ? 'checked' : '' }}>
+                                    <div class="rounded-xl border-2 border-[#EDD3D6] px-3 py-4 text-center transition
+                                                peer-checked:border-[#814C5B] peer-checked:bg-[#FCF1F0] hover:border-[#c9a0a8]">
+                                        <span class="block {{ $sample }} font-semibold text-[#4b4848]">Aa</span>
+                                        <span class="block text-xs text-[#9b7d84] mt-1">{{ $label }}</span>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- ===== Animasi ===== --}}
+                    <div>
+                        <h3 class="text-sm font-semibold text-[#4b4848]">Animasi</h3>
+                        <p class="text-xs text-[#9b7d84] mb-3">Matikan jika kamu lebih nyaman tanpa efek gerak dan transisi.</p>
+
+                        <div class="flex gap-3">
+                            @foreach (['on' => 'Aktif', 'off' => 'Nonaktif'] as $value => $label)
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="animations" value="{{ $value }}" class="peer sr-only"
+                                           {{ $prefs['chloe_animations'] === $value ? 'checked' : '' }}>
+                                    <span class="inline-block rounded-full border-2 border-[#EDD3D6] px-5 py-2 text-sm text-[#4b4848] transition
+                                                 peer-checked:border-[#814C5B] peer-checked:bg-[#814C5B] peer-checked:text-white hover:border-[#c9a0a8]">
+                                        {{ $label }}
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- ===== Ingat pencarian terakhir ===== --}}
+                    <div>
+                        <h3 class="text-sm font-semibold text-[#4b4848]">Ingat Pencarian Terakhir</h3>
+                        <p class="text-xs text-[#9b7d84] mb-3">Kotak Availability Check di beranda otomatis terisi dengan fasilitas, tanggal, dan jam yang terakhir kamu cek.</p>
+
+                        <div class="flex gap-3">
+                            @foreach (['on' => 'Ya', 'off' => 'Tidak'] as $value => $label)
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="remember_search" value="{{ $value }}" class="peer sr-only"
+                                           {{ $prefs['chloe_remember_search'] === $value ? 'checked' : '' }}>
+                                    <span class="inline-block rounded-full border-2 border-[#EDD3D6] px-5 py-2 text-sm text-[#4b4848] transition
+                                                 peer-checked:border-[#814C5B] peer-checked:bg-[#814C5B] peer-checked:text-white hover:border-[#c9a0a8]">
+                                        {{ $label }}
+                                    </span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3 pt-4 border-t border-[#EDD3D6]">
+                        <button type="submit"
+                                class="bg-[#814C5B] hover:bg-[#6b3e4b] text-white text-sm font-semibold px-7 py-2.5 rounded-full transition">
+                            Simpan
+                        </button>
+                    </div>
+                </form>
+
+                {{-- Kembalikan ke default (hapus cookie preferensi) --}}
+                <form method="POST" action="{{ route('profile.personalization.reset') }}" class="mt-3"
+                      onsubmit="return confirm('Kembalikan semua pengaturan tampilan ke awal?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="text-sm text-[#814C5B] underline hover:no-underline">
+                        Kembalikan ke pengaturan awal
+                    </button>
+                </form>
 
             </div>
         </div>

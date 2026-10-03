@@ -57,7 +57,6 @@ class AdminController extends Controller
             'area'           => 'nullable|string|max:100',
             'description'    => 'nullable|string|max:2000',
             'amenities'      => 'nullable|string|max:1000',
-            'price_per_hour' => 'nullable|integer|min:0',
             'contact_phone'  => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
             'status'         => ['required', Rule::in(self::FACILITY_STATUSES)],
             'image'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',

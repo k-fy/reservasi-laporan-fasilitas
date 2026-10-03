@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recap - Admin Chloe</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}?v=2">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-[#5c4f50] m-0 p-0 text-white min-h-screen flex flex-col">
+<body class="bg-[#5c4f50] m-0 p-0 text-white min-h-screen flex flex-col overflow-x-hidden">
 
     @include('admin.components.header')
 
@@ -44,7 +45,7 @@
         @include('admin.components.sidebar')
 
         <!-- Main Content Area -->
-        <main class="flex-1 px-8 py-8">
+        <main class="flex-1 min-w-0 px-8 py-8">
             <div class="max-w-7xl mx-auto flex flex-col gap-6">
 
                 <!-- Judul + Filter Bulan -->

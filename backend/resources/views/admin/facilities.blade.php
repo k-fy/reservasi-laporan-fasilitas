@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Master Data Facilities - Admin Chloe</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}?v=2">
     <script src="https://cdn.tailwindcss.com"></script>
     {{-- Alpine.js sudah dimuat oleh admin.components.header, jadi tidak dimuat ulang di sini --}}
 </head>
-<body class="bg-[#5c4f50] m-0 p-0 text-white min-h-screen flex flex-col">
+<body class="bg-[#5c4f50] m-0 p-0 text-white min-h-screen flex flex-col overflow-x-hidden">
 
     @include('admin.components.header')
 
@@ -21,7 +22,7 @@
         @include('admin.components.sidebar')
 
         <!-- Main Content Area -->
-        <main class="flex-1 px-8 py-8" x-data="facilityManager()">
+        <main class="flex-1 min-w-0 px-8 py-8" x-data="facilityManager()">
             <div class="max-w-7xl mx-auto flex flex-col gap-6">
 
                 <!-- Judul Halaman + Tombol Tambah -->
@@ -127,9 +128,6 @@
                                                     @endif
                                                     <div class="min-w-0">
                                                         <p class="font-semibold text-gray-800">{{ $facility->name }}</p>
-                                                        @if ($facility->price_per_hour)
-                                                            <p class="text-xs text-gray-400">Rp{{ number_format($facility->price_per_hour, 0, ',', '.') }}/jam</p>
-                                                        @endif
                                                     </div>
                                                 </div>
                                             </td>
@@ -330,26 +328,16 @@
                             </div>
                         </section>
 
-                        <!-- ===== Bagian 3: Harga & Kontak ===== -->
+                        <!-- ===== Bagian 3: Kontak ===== -->
                         <section class="space-y-4">
-                            <p class="text-xs font-semibold uppercase tracking-wider text-[#86545e]">Harga & Kontak</p>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-[#86545e]">Kontak</p>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block font-semibold mb-1.5 text-gray-700">Harga per Jam</label>
-                                    <div class="relative">
-                                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">Rp</span>
-                                        <input type="number" name="price_per_hour" x-model="form.price_per_hour" min="0" step="1000" placeholder="0"
-                                               class="w-full bg-[#f8f4f4] border border-transparent rounded-xl pl-11 pr-4 py-3 text-sm text-gray-700 focus:bg-white focus:border-[#e2b8bc] focus:ring-2 focus:ring-[#e2b8bc]/50 focus:outline-none transition">
-                                    </div>
-                                    <p class="text-xs text-gray-400 mt-1">Kosongkan jika gratis.</p>
-                                </div>
-                                <div>
-                                    <label class="block font-semibold mb-1.5 text-gray-700">Nomor Kontak</label>
-                                    <input type="tel" name="contact_phone" x-model="form.contact_phone" maxlength="20" pattern="[0-9+\-\s]+" placeholder="0812-1001-1002"
-                                           title="Hanya angka, spasi, tanda + atau -"
-                                           class="w-full bg-[#f8f4f4] border border-transparent rounded-xl px-4 py-3 text-sm text-gray-700 focus:bg-white focus:border-[#e2b8bc] focus:ring-2 focus:ring-[#e2b8bc]/50 focus:outline-none transition">
-                                </div>
+                            <div>
+                                <label class="block font-semibold mb-1.5 text-gray-700">Nomor Kontak Pengelola</label>
+                                <input type="tel" name="contact_phone" x-model="form.contact_phone" maxlength="20" pattern="[0-9+\-\s]+" placeholder="0812-1001-1002"
+                                       title="Hanya angka, spasi, tanda + atau -"
+                                       class="w-full sm:w-1/2 bg-[#f8f4f4] border border-transparent rounded-xl px-4 py-3 text-sm text-gray-700 focus:bg-white focus:border-[#e2b8bc] focus:ring-2 focus:ring-[#e2b8bc]/50 focus:outline-none transition">
+                                <p class="text-xs text-gray-400 mt-1">Peminjaman fasilitas tidak dipungut biaya.</p>
                             </div>
                         </section>
 
@@ -404,7 +392,6 @@
                 location: '',
                 capacity: 0,
                 area: '',
-                price_per_hour: '',
                 contact_phone: '',
                 amenities: '',
                 description: '',
@@ -435,7 +422,6 @@
                             location:       @json(old('location', '')),
                             capacity:       @json(old('capacity', 0)),
                             area:           @json(old('area', '')),
-                            price_per_hour: @json(old('price_per_hour', '')),
                             contact_phone:  @json(old('contact_phone', '')),
                             amenities:      @json(old('amenities', '')),
                             description:    @json(old('description', '')),
@@ -497,7 +483,6 @@
                         location:       facility.location || '',
                         capacity:       facility.capacity ?? 0,
                         area:           facility.area || '',
-                        price_per_hour: facility.price_per_hour ?? '',
                         contact_phone:  facility.contact_phone || '',
                         amenities:      facility.amenities || '',
                         description:    facility.description || '',

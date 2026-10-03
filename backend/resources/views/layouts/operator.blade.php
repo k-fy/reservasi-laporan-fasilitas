@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>@yield('title', 'Chloe - Officer Panel')</title>
+<link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}?v=2">
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 
 <!-- Font: Poppins (teks) & Radley (logo + judul), sama dengan halaman admin -->
@@ -26,7 +27,7 @@
   --serif:'Radley', Georgia, serif; --sans:'Poppins', system-ui, sans-serif;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;-webkit-font-smoothing:antialiased}
+body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--sans);font-size:15px;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -35,7 +36,7 @@ svg{flex-shrink:0}
 .app{display:grid;grid-template-rows:auto 1fr;min-height:100vh}
 
 /* ================= HEADER (sama dengan admin) ================= */
-.topbar{background:var(--topbar);display:flex;align-items:center;justify-content:space-between;padding:10px 32px;border-bottom:2px solid var(--topbar-line)}
+.topbar{background:var(--topbar);display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;padding:10px 32px;border-bottom:2px solid var(--topbar-line)}
 .brand{display:flex;align-items:center;gap:12px}
 .brand-logo{height:40px;width:auto;object-fit:contain;display:block}
 .brand b{display:block;font-family:var(--serif);font-style:italic;font-weight:400;font-size:30px;line-height:1;color:#ffdcdc}
@@ -65,7 +66,7 @@ svg{flex-shrink:0}
 .menu-item.danger:hover{background:#fff1f2}
 
 /* ================= SIDEBAR (sama dengan admin) ================= */
-.shell{display:grid;grid-template-columns:256px 1fr;min-height:0}
+.shell{display:grid;grid-template-columns:256px minmax(0,1fr);min-height:0}
 .side{background:var(--sidebar);box-shadow:2px 0 6px rgba(0,0,0,.08)}
 .side nav{position:sticky;top:0;display:flex;flex-direction:column;gap:6px;padding:24px 16px}
 .side .menu-label{padding:0 16px;margin:0 0 8px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--rose)}
@@ -77,7 +78,7 @@ svg{flex-shrink:0}
 .side a[aria-current="page"] .count{background:var(--chip);color:var(--topbar)}
 
 /* ================= KONTEN ================= */
-main{padding:32px 40px 48px;max-width:1240px;width:100%}
+main{padding:32px 40px 48px;max-width:1240px;width:100%;min-width:0}
 h1{font-family:var(--serif);font-style:italic;font-weight:400;font-size:40px;line-height:1.1;margin:0;color:var(--blush)}
 .sub{margin:6px 0 26px;font-size:14px;color:var(--blush-soft)}
 
@@ -200,6 +201,10 @@ td small{display:block;color:var(--ink-soft);font-size:12.5px;margin-top:2px}
 
 [x-cloak]{display:none!important}
 
+/* Sembunyikan scrollbar (halaman tetap bisa di-scroll) */
+html{scrollbar-width:none}
+::-webkit-scrollbar{display:none}
+
 @media (max-width:820px){
   .shell{grid-template-columns:1fr;grid-template-rows:auto 1fr}
   .side nav{position:static;flex-direction:row;overflow-x:auto;padding:10px;gap:6px}
@@ -234,7 +239,10 @@ td small{display:block;color:var(--ink-soft);font-size:12.5px;margin-top:2px}
     <div class="user" x-data="{ open: false }" @click.outside="open = false">
       <button type="button" class="user-trigger" @click="open = !open" :aria-expanded="open.toString()">
         @if ($photoUrl)
-          <img src="{{ $photoUrl }}" alt="Foto profil {{ $userName }}" class="avatar">
+          {{-- Jika file foto gagal dimuat, tampilkan inisial sebagai cadangan --}}
+          <img src="{{ $photoUrl }}" alt="Foto profil {{ $userName }}" class="avatar"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <span class="avatar" aria-hidden="true" style="display:none">{{ $initial }}</span>
         @else
           <span class="avatar" aria-hidden="true">{{ $initial }}</span>
         @endif
@@ -245,7 +253,9 @@ td small{display:block;color:var(--ink-soft);font-size:12.5px;margin-top:2px}
       <div class="user-menu" x-show="open" x-cloak x-transition>
         <div class="user-info">
           @if ($photoUrl)
-            <img src="{{ $photoUrl }}" alt="Foto profil {{ $userName }}" class="avatar lg">
+            <img src="{{ $photoUrl }}" alt="Foto profil {{ $userName }}" class="avatar lg"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <span class="avatar lg" aria-hidden="true" style="display:none">{{ $initial }}</span>
           @else
             <span class="avatar lg" aria-hidden="true">{{ $initial }}</span>
           @endif
@@ -264,8 +274,7 @@ td small{display:block;color:var(--ink-soft);font-size:12.5px;margin-top:2px}
 
         <div class="menu-sep"></div>
 
-        <form method="POST" action="{{ route('logout') }}"
-              onsubmit="return confirm('Yakin ingin keluar dari sesi ini? Anda harus login kembali untuk mengakses dashboard.')">
+        <form method="POST" action="{{ route('logout') }}">
           @csrf
           <button type="submit" class="menu-item danger">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
@@ -311,5 +320,8 @@ td small{display:block;color:var(--ink-soft);font-size:12.5px;margin-top:2px}
     </main>
   </div>
 </div>
+
+<!-- Konfirmasi Log Out -->
+<x-logout-confirm />
 </body>
 </html>

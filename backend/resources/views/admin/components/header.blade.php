@@ -1,3 +1,6 @@
+<!-- Favicon (file: public/images/favicon.png) -->
+<link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}?v=2">
+
 <!-- Google Fonts: Poppins (termasuk italic) & Radley -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,9 +26,13 @@
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
+
+    /* Sembunyikan scrollbar (halaman tetap bisa di-scroll) */
+    html { scrollbar-width: none; }
+    ::-webkit-scrollbar { display: none; }
 </style>
 
-<header class="flex justify-between items-center px-8 py-2.5 bg-[#42393a] border-b-2 border-[#e2b8bc] text-white">
+<header class="w-full shrink-0 flex justify-between items-center gap-4 px-8 py-2.5 bg-[#42393a] border-b-2 border-[#e2b8bc] text-white">
     <!-- Left Logo Section -->
     <div class="flex items-center space-x-3">
         <img src="{{ asset('images/logoPink.png') }}" alt="Chloe Logo" class="h-10 w-auto object-contain">
@@ -60,8 +67,13 @@
         <button @click="open = !open"
                 class="flex items-center gap-2.5 bg-[#e2b8bc] hover:bg-[#ffdcdc] text-[#42393a] text-base font-semibold pl-1.5 pr-4 py-1.5 rounded-full shadow transition focus:outline-none cursor-pointer">
             @if ($photoUrl)
+                {{-- Jika file foto gagal dimuat, tampilkan inisial sebagai cadangan --}}
                 <img src="{{ $photoUrl }}" alt="Foto profil {{ $userName }}"
-                     class="w-9 h-9 rounded-full object-cover border-2 border-[#42393a]/20">
+                     class="w-9 h-9 rounded-full object-cover border-2 border-[#42393a]/20"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <span class="w-9 h-9 rounded-full bg-[#42393a] text-[#e2b8bc] items-center justify-center text-sm font-semibold" style="display:none">
+                    {{ $initial }}
+                </span>
             @else
                 <span class="w-9 h-9 rounded-full bg-[#42393a] text-[#e2b8bc] flex items-center justify-center text-sm font-semibold">
                     {{ $initial }}
@@ -88,7 +100,9 @@
             <!-- Info akun -->
             <div class="flex items-center gap-3 px-4 py-2">
                 @if ($photoUrl)
-                    <img src="{{ $photoUrl }}" alt="Foto profil {{ $userName }}" class="w-10 h-10 rounded-full object-cover">
+                    <img src="{{ $photoUrl }}" alt="Foto profil {{ $userName }}" class="w-10 h-10 rounded-full object-cover"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span class="w-10 h-10 rounded-full bg-[#42393a] text-[#e2b8bc] items-center justify-center text-sm font-semibold shrink-0" style="display:none">{{ $initial }}</span>
                 @else
                     <span class="w-10 h-10 rounded-full bg-[#42393a] text-[#e2b8bc] flex items-center justify-center text-sm font-semibold shrink-0">{{ $initial }}</span>
                 @endif
@@ -123,3 +137,6 @@
         </div>
     </div>
 </header>
+
+<!-- Konfirmasi Log Out -->
+<x-logout-confirm />

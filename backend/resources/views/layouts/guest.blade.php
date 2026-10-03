@@ -5,8 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('app.name', 'Chloe') }}</title>
 
+    <!-- Favicon (file: public/images/favicon.png) -->
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}?v=2">
+
     <!-- Fonts & Styles (Vite) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <!-- Sembunyikan scrollbar (halaman tetap bisa di-scroll) -->
+    <style>
+        html { scrollbar-width: none; }        /* Firefox */
+        ::-webkit-scrollbar { display: none; } /* Chrome, Edge, Safari */
+    </style>
 </head>
 <body class="antialiased">
     <div class="min-h-screen w-full bg-cover bg-center relative flex items-center justify-center p-6"

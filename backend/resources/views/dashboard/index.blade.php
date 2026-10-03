@@ -4,6 +4,46 @@
 
 @section('content')
 
+{{-- ================= ANIMASI BERANDA ================= --}}
+<style>
+    /* Muncul perlahan saat halaman dibuka */
+    .hero-fade { animation: heroFade .8s ease-out both; }
+    .hero-fade-delay { animation: heroFade .8s ease-out .2s both; }
+    @keyframes heroFade {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Muncul dari bawah saat di-scroll ke bagian tersebut */
+    .reveal { opacity: 0; transform: translateY(28px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+    /* Kartu sedikit terangkat saat disorot */
+    .lift { transition: transform .25s ease, box-shadow .25s ease; }
+    .lift:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(0, 0, 0, .25); }
+
+    /* Ikon FAQ berputar saat dibuka */
+    .faq-icon { transition: transform .3s ease; }
+    details[open] > summary .faq-icon { transform: rotate(180deg); }
+    .faq-item > summary { transition: background-color .2s ease; }
+    .faq-item > summary:hover { background-color: #5c5959; }
+
+    /* Hasil Availability Check muncul halus */
+    .result-pop { animation: resultPop .35s ease-out; }
+    @keyframes resultPop {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Matikan animasi untuk pengguna yang memilih "kurangi gerakan" */
+    @media (prefers-reduced-motion: reduce) {
+        .hero-fade, .hero-fade-delay, .result-pop { animation: none; }
+        .reveal { opacity: 1; transform: none; transition: none; }
+        .lift, .lift:hover { transform: none; transition: none; }
+        .faq-icon { transition: none; }
+    }
+</style>
+
 <!-- HERO -->
 @php $heroBg = asset('images/hero.png'); @endphp
 <section class="relative min-h-[570px] bg-cover bg-center flex flex-wrap items-center justify-between gap-8 px-[6%] py-[70px] text-white"
@@ -13,7 +53,7 @@
     <div class="absolute inset-0" style="background: linear-gradient(to bottom, rgba(35,35,35,0.4) 0%, rgba(35,35,35,0.75) 60%, #4A4A4A 100%);"></div>
 
     {{-- Hero Content --}}
-    <div class="relative z-10 -mt-12 text-left">
+    <div class="relative z-10 -mt-12 text-left hero-fade">
         <p class="font-['Georgia',serif] italic text-[25px] mb-3 text-[#F7D6D0]">Welcome to Chloe.</p>
         <h1 class="font-['Poppins',sans-serif] text-left text-[#FFF5F5] font-bold leading-tight text-[48px]">
             Looking for your<br>
@@ -32,7 +72,7 @@
     </div>
 
     <!-- Availability Card -->
-    <div id="availability-card" class="relative z-10 w-[365px] max-w-full bg-[rgba(55,53,53,0.85)] border-2 border-[#f3d8d5] rounded-[25px] p-6 shadow-[0_0_8px_rgba(255,220,220,0.8)] text-left font-['Poppins',sans-serif]">
+    <div id="availability-card" class="hero-fade-delay relative z-10 w-[365px] max-w-full bg-[rgba(55,53,53,0.85)] border-2 border-[#f3d8d5] rounded-[25px] p-6 shadow-[0_0_8px_rgba(255,220,220,0.8)] text-left font-['Poppins',sans-serif]">
         <h2 class="font-bold text-[#FFF5F5] text-lg">Availability Check</h2>
         <div class="h-[2px] bg-[#F7D6D0] my-3 rounded"></div>
 
@@ -137,13 +177,13 @@
 
 <!-- ANNOUNCEMENTS -->
 <section class="bg-[#4d4b4b] text-white px-[5%] py-[60px]">
-    <h2 class="text-center font-['Radley',Georgia,serif] italic text-[28px] text-[#FFF5F5]">Announcements</h2>
-    <div class="w-[90%] h-[2px] bg-white mx-auto my-2.5 mb-5"></div>
+    <h2 class="reveal text-center font-['Radley',Georgia,serif] italic text-[28px] text-[#FFF5F5]">Announcements</h2>
+    <div class="reveal w-[90%] h-[2px] bg-white mx-auto my-2.5 mb-5"></div>
 
     <div class="grid grid-cols-3 gap-5 items-start">
 
         <!-- Kartu 1: Jadwal Pemeliharaan Aula -->
-        <div class="bg-[#fff7f7] text-[#4b4848] rounded-[10px] p-[18px] text-center font-['Poppins',sans-serif] flex flex-col justify-between">
+        <div class="reveal lift bg-[#fff7f7] text-[#4b4848] rounded-[10px] p-[18px] text-center font-['Poppins',sans-serif] flex flex-col justify-between">
             <div>
                 <p class="text-[11px] mb-1.5 font-semibold">03/09/2026</p>
                 <h3 class="text-[13px] mb-2 font-semibold">Jadwal Pemeliharaan Aula</h3>
@@ -151,7 +191,7 @@
                     <span class="text-[9px] leading-tight">Aula utama akan ditutup sementara untuk pemeliharaan rutin.</span>
                 </div>
             </div>
-            <details class="group mt-3 text-left">
+            <details class="group mt-3 text-left" data-accordion>
                 <summary class="list-none text-right text-[9px] italic text-[#4b4848] cursor-pointer font-semibold select-none">
                     <span class="group-open:hidden">Read more ›</span>
                     <span class="hidden group-open:inline">Tutup ‹</span>
@@ -163,7 +203,7 @@
         </div>
 
         <!-- Kartu 2: Fitur Reservasi Baru -->
-        <div class="bg-[#fff7f7] text-[#4b4848] rounded-[10px] p-[18px] text-center font-['Poppins',sans-serif] flex flex-col justify-between">
+        <div class="reveal lift bg-[#fff7f7] text-[#4b4848] rounded-[10px] p-[18px] text-center font-['Poppins',sans-serif] flex flex-col justify-between">
             <div>
                 <p class="text-[11px] mb-1.5 font-semibold">03/09/2026</p>
                 <h3 class="text-[13px] mb-2 font-semibold">Fitur Reservasi Baru</h3>
@@ -171,7 +211,7 @@
                     <span class="text-[9px] leading-tight">Sekarang kamu bisa cek ketersediaan fasilitas langsung dari halaman utama.</span>
                 </div>
             </div>
-            <details class="group mt-3 text-left">
+            <details class="group mt-3 text-left" data-accordion>
                 <summary class="list-none text-right text-[9px] italic text-[#4b4848] cursor-pointer font-semibold select-none">
                     <span class="group-open:hidden">Read more ›</span>
                     <span class="hidden group-open:inline">Tutup ‹</span>
@@ -183,7 +223,7 @@
         </div>
 
         <!-- Kartu 3: Jam Operasional Berubah -->
-        <div class="bg-[#fff7f7] text-[#4b4848] rounded-[10px] p-[18px] text-center font-['Poppins',sans-serif] flex flex-col justify-between">
+        <div class="reveal lift bg-[#fff7f7] text-[#4b4848] rounded-[10px] p-[18px] text-center font-['Poppins',sans-serif] flex flex-col justify-between">
             <div>
                 <p class="text-[11px] mb-1.5 font-semibold">03/09/2026</p>
                 <h3 class="text-[13px] mb-2 font-semibold">Jam Operasional Berubah</h3>
@@ -191,7 +231,7 @@
                     <span class="text-[9px] leading-tight">Jam operasional gedung diperbarui mulai bulan ini.</span>
                 </div>
             </div>
-            <details class="group mt-3 text-left">
+            <details class="group mt-3 text-left" data-accordion>
                 <summary class="list-none text-right text-[9px] italic text-[#4b4848] cursor-pointer font-semibold select-none">
                     <span class="group-open:hidden">Read more ›</span>
                     <span class="hidden group-open:inline">Tutup ‹</span>
@@ -207,20 +247,20 @@
 
 <!-- HOW TO USE -->
 <section class="bg-[#4d4b4b] text-white px-[5%] py-[60px]">
-    <h2 class="text-center font-['Radley',Georgia,serif] italic text-[28px] text-[#FFF5F5]">How to Use</h2>
-    <div class="w-[90%] h-[2px] bg-white mx-auto my-2.5 mb-5"></div>
+    <h2 class="reveal text-center font-['Radley',Georgia,serif] italic text-[28px] text-[#FFF5F5]">How to Use</h2>
+    <div class="reveal w-[90%] h-[2px] bg-white mx-auto my-2.5 mb-5"></div>
     <div class="grid grid-cols-3 gap-9">
-        <div class="bg-[#f0d3cf] text-[#4b4848] rounded-[10px] min-h-[145px] p-[15px] text-center font-['Poppins',sans-serif]">
+        <div class="reveal lift bg-[#f0d3cf] text-[#4b4848] rounded-[10px] min-h-[145px] p-[15px] text-center font-['Poppins',sans-serif]">
             <div class="w-[22px] h-[22px] mx-auto mb-4 bg-white rounded-full text-[11px] flex items-center justify-center font-bold">1</div>
             <h3 class="text-[12px] mb-2 font-semibold">Find your venue</h3>
             <p class="text-[10px] leading-tight">Search and select the space you want to book</p>
         </div>
-        <div class="bg-[#f0d3cf] text-[#4b4848] rounded-[10px] min-h-[145px] p-[15px] text-center font-['Poppins',sans-serif]">
+        <div class="reveal lift bg-[#f0d3cf] text-[#4b4848] rounded-[10px] min-h-[145px] p-[15px] text-center font-['Poppins',sans-serif]">
             <div class="w-[22px] h-[22px] mx-auto mb-4 bg-white rounded-full text-[11px] flex items-center justify-center font-bold">2</div>
             <h3 class="text-[12px] mb-2 font-semibold">Choose your date & time</h3>
             <p class="text-[10px] leading-tight">Pick your preferred schedule for the reservation</p>
         </div>
-        <div class="bg-[#f0d3cf] text-[#4b4848] rounded-[10px] min-h-[145px] p-[15px] text-center font-['Poppins',sans-serif]">
+        <div class="reveal lift bg-[#f0d3cf] text-[#4b4848] rounded-[10px] min-h-[145px] p-[15px] text-center font-['Poppins',sans-serif]">
             <div class="w-[22px] h-[22px] mx-auto mb-4 bg-white rounded-full text-[11px] flex items-center justify-center font-bold">3</div>
             <h3 class="text-[12px] mb-2 font-semibold">Confirm & Done</h3>
             <p class="text-[10px] leading-tight">Finalize your order</p>
@@ -230,42 +270,39 @@
 
 <!-- FAQ -->
 <section id="faq" class="px-[5%] py-[60px] min-h-[420px]" style="background: linear-gradient(to bottom, #4d4b4b 0%, #FFF5F5 100%);">
-    <h2 class="text-center font-['Radley',Georgia,serif] italic text-[28px] text-white">Frequently Asked Questions</h2>
-    <div class="w-[90%] h-[2px] bg-white mx-auto my-2.5 mb-5"></div>
+    <h2 class="reveal text-center font-['Radley',Georgia,serif] italic text-[28px] text-white">Frequently Asked Questions</h2>
+    <div class="reveal w-[90%] h-[2px] bg-white mx-auto my-2.5 mb-5"></div>
     <div class="w-[85%] mx-auto">
 
         <!-- FAQ Item 1 -->
-        <details class="group mb-[18px]">
+        <details class="faq-item reveal group mb-[18px] rounded-lg overflow-hidden" data-accordion="faq">
             <summary class="list-none bg-[#4d4b4b] text-white px-4 py-2.5 text-[11px] flex justify-between items-center cursor-pointer font-['Poppins',sans-serif]">
                 Bagaimana cara reservasi fasilitas?
-                <span class="text-sm font-bold group-open:hidden">▼</span>
-                <span class="text-base font-bold hidden group-open:inline">×</span>
+                <svg class="faq-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
             </summary>
-            <div class="min-h-[120px] bg-white border border-[#555] p-5 text-[12px] font-['Poppins',sans-serif]">
+            <div class="bg-white border border-[#555] border-t-0 p-5 text-[12px] leading-relaxed font-['Poppins',sans-serif]">
                 Pilih fasilitas yang ingin digunakan, tentukan tanggal dan waktu, kemudian lakukan reservasi.
             </div>
         </details>
 
         <!-- FAQ Item 2 -->
-        <details class="group mb-[18px]">
+        <details class="faq-item reveal group mb-[18px] rounded-lg overflow-hidden" data-accordion="faq">
             <summary class="list-none bg-[#4d4b4b] text-white px-4 py-2.5 text-[11px] flex justify-between items-center cursor-pointer font-['Poppins',sans-serif]">
                 Apakah reservasi bisa dibatalkan?
-                <span class="text-sm font-bold group-open:hidden">▼</span>
-                <span class="text-base font-bold hidden group-open:inline">×</span>
+                <svg class="faq-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
             </summary>
-            <div class="min-h-[120px] bg-white border border-[#555] p-5 text-[12px] font-['Poppins',sans-serif]">
+            <div class="bg-white border border-[#555] border-t-0 p-5 text-[12px] leading-relaxed font-['Poppins',sans-serif]">
                 Ya, reservasi dapat dibatalkan sesuai dengan ketentuan yang berlaku.
             </div>
         </details>
 
         <!-- FAQ Item 3 -->
-        <details class="group mb-[18px]">
+        <details class="faq-item reveal group mb-[18px] rounded-lg overflow-hidden" data-accordion="faq">
             <summary class="list-none bg-[#4d4b4b] text-white px-4 py-2.5 text-[11px] flex justify-between items-center cursor-pointer font-['Poppins',sans-serif]">
                 Berapa lama proses persetujuan reservasi?
-                <span class="text-sm font-bold group-open:hidden">▼</span>
-                <span class="text-base font-bold hidden group-open:inline">×</span>
+                <svg class="faq-icon w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
             </summary>
-            <div class="min-h-[120px] bg-white border border-[#555] p-5 text-[12px] font-['Poppins',sans-serif]">
+            <div class="bg-white border border-[#555] border-t-0 p-5 text-[12px] leading-relaxed font-['Poppins',sans-serif]">
                 Reservasi akan diproses oleh petugas setelah pengajuan dilakukan.
             </div>
         </details>
@@ -284,6 +321,22 @@
         const endSelect   = document.getElementById('end_time');
         const errorBox    = document.getElementById('availability-error');
         const submitBtn   = document.getElementById('availability-submit');
+
+        /* ===== Cookie pencarian terakhir (preferensi "Ingat pencarian terakhir") ===== */
+        const rememberSearch = document.documentElement.dataset.rememberSearch !== 'off';
+        const LAST_SEARCH_COOKIE = 'chloe_last_search';
+
+        function saveLastSearch(data) {
+            if (!rememberSearch) return;
+            const value = encodeURIComponent(JSON.stringify(data));
+            document.cookie = `${LAST_SEARCH_COOKIE}=${value}; max-age=${60 * 60 * 24 * 30}; path=/; SameSite=Lax`;
+        }
+
+        function readLastSearch() {
+            const match = document.cookie.split('; ').find(row => row.startsWith(LAST_SEARCH_COOKIE + '='));
+            if (!match) return null;
+            try { return JSON.parse(decodeURIComponent(match.split('=')[1])); } catch (e) { return null; }
+        }
 
         const escapeHtml = (text) => String(text ?? '').replace(/[&<>"']/g, c => (
             { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
@@ -378,6 +431,22 @@
         function hideError() { errorBox.classList.add('hidden'); }
 
         startSelect.addEventListener('change', () => { syncEndOptions(); hideError(); });
+
+        /* Isi otomatis dengan pencarian terakhir (jika preferensinya aktif dan tanggalnya belum lewat) */
+        (function prefillLastSearch() {
+            if (!rememberSearch) return;
+            const last = readLastSearch();
+            const today = new Date().toLocaleDateString('en-CA');
+            if (!last || !facilities.some(f => String(f.id) === String(last.facility_id))) return;
+
+            searchInput.value     = last.facility_name || '';
+            facilityIdInput.value = last.facility_id;
+            if (last.date && last.date >= today) dateInput.value = last.date;
+            if (last.start_time) startSelect.value = last.start_time;
+            syncEndOptions();
+            if (last.end_time) endSelect.value = last.end_time;
+        })();
+
         [dateInput, startSelect, endSelect].forEach(el => el.addEventListener('change', () => { hideError(); hideResult(); }));
 
         /* ================= 3. CEK KETERSEDIAAN ================= */
@@ -416,7 +485,9 @@
                 resultAction.innerHTML = '';
             }
 
-            resultBox.classList.remove('hidden');
+            resultBox.classList.remove('hidden', 'result-pop');
+            void resultBox.offsetWidth;          // reset agar animasi diputar ulang
+            resultBox.classList.add('result-pop');
         }
 
         form.addEventListener('submit', async function (event) {
@@ -465,6 +536,14 @@
                     return;
                 }
                 renderResult(data);
+
+                saveLastSearch({
+                    facility_id: facilityIdInput.value,
+                    facility_name: searchInput.value,
+                    date: dateInput.value,
+                    start_time: startSelect.value,
+                    end_time: endSelect.value,
+                });
             } catch (err) {
                 showError('Could not reach the server. Check your connection and try again.');
             } finally {
@@ -473,6 +552,92 @@
             }
         });
 
+    })();
+</script>
+
+<script>
+    (function () {
+        // Animasi mati jika perangkat meminta "kurangi gerakan" ATAU preferensi di Personalization = off
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            || document.documentElement.classList.contains('reduce-motion');
+
+        /* ===== Muncul saat di-scroll ===== */
+        const revealItems = document.querySelectorAll('.reveal');
+
+        // Kartu dalam satu baris muncul bergantian
+        document.querySelectorAll('.grid').forEach(grid => {
+            grid.querySelectorAll(':scope > .reveal').forEach((card, i) => {
+                card.style.transitionDelay = `${i * 120}ms`;
+            });
+        });
+
+        if (reduceMotion || !('IntersectionObserver' in window)) {
+            revealItems.forEach(el => el.classList.add('is-visible'));
+        } else {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+            revealItems.forEach(el => observer.observe(el));
+        }
+
+        /* ===== Buka-tutup halus untuk FAQ & "Read more" ===== */
+        const accordions = document.querySelectorAll('details[data-accordion]');
+
+        function animateOpen(details) {
+            const content = details.querySelector(':scope > summary').nextElementSibling;
+            details.open = true;
+            if (reduceMotion) return;
+
+            const height = content.scrollHeight;
+            content.style.overflow = 'hidden';
+            content.animate(
+                [{ height: '0px', opacity: 0 }, { height: height + 'px', opacity: 1 }],
+                { duration: 300, easing: 'ease-out' }
+            ).onfinish = () => { content.style.overflow = ''; };
+        }
+
+        function animateClose(details) {
+            const content = details.querySelector(':scope > summary').nextElementSibling;
+            if (reduceMotion) { details.open = false; return; }
+
+            const height = content.offsetHeight;
+            content.style.overflow = 'hidden';
+            content.animate(
+                [{ height: height + 'px', opacity: 1 }, { height: '0px', opacity: 0 }],
+                { duration: 250, easing: 'ease-in' }
+            ).onfinish = () => {
+                details.open = false;
+                content.style.overflow = '';
+            };
+        }
+
+        accordions.forEach(details => {
+            details.querySelector(':scope > summary').addEventListener('click', (event) => {
+                event.preventDefault();
+
+                if (details.open) {
+                    animateClose(details);
+                    return;
+                }
+
+                // FAQ: hanya satu pertanyaan terbuka dalam satu waktu
+                const group = details.dataset.accordion;
+                if (group) {
+                    accordions.forEach(other => {
+                        if (other !== details && other.open && other.dataset.accordion === group) {
+                            animateClose(other);
+                        }
+                    });
+                }
+
+                animateOpen(details);
+            });
+        });
     })();
 </script>
 

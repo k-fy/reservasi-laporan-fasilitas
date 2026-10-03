@@ -43,8 +43,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/users/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('users.toggle-status');
     Route::patch('/users/{user}/verify', [AdminController::class, 'verifyUser'])->name('users.verify');
     Route::patch('/users/{user}/reject', [AdminController::class, 'rejectUser'])->name('users.reject');
-    Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
-    Route::get('/accounts', [AdminController::class, 'accounts'])->name('accounts');
 
     // Facilities
     Route::get('/facilities', [AdminController::class, 'facilities'])->name('facilities');
@@ -63,6 +61,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::get('/profile/personalization', [ProfileController::class, 'personalization'])->name('profile.personalization');
+    Route::post('/profile/personalization', [ProfileController::class, 'updatePersonalization'])->name('profile.personalization.update');
+    Route::delete('/profile/personalization', [ProfileController::class, 'resetPersonalization'])->name('profile.personalization.reset');
     Route::get('/profile/text-settings', [ProfileController::class, 'textSettings'])->name('profile.text-settings');
     Route::get('/profile/tts', [ProfileController::class, 'tts'])->name('profile.tts');
     Route::get('/profile/permissions', [ProfileController::class, 'permissions'])->name('profile.permissions');
@@ -76,8 +76,8 @@ Route::prefix('booking')->name('booking.')->group(function () {
     // Publik — pengunjung bisa lihat daftar fasilitas tanpa login
     Route::get('/', [BookingController::class, 'index'])->name('index');
 
-    // Wajib login (didefinisikan sebelum /{facility} supaya tidak tertangkap sebagai ID fasilitas)
-    Route::middleware('auth')->group(function () {
+    // Khusus pengguna (didefinisikan sebelum /{facility} supaya tidak tertangkap sebagai ID fasilitas)
+    Route::middleware(['auth', 'role:pengguna'])->group(function () {
         Route::get('/success', [BookingController::class, 'success'])->name('reserve.success');
         Route::get('/history', [BookingController::class, 'history'])->name('history');
     });
@@ -85,18 +85,17 @@ Route::prefix('booking')->name('booking.')->group(function () {
     // Publik — detail & ketersediaan slot
     Route::get('/{facility}/booked-slots', [BookingController::class, 'getBookedSlots']);
     Route::get('/{facility}', [BookingController::class, 'show'])->name('show');
-    Route::get('/booking/{facility}/slots', [BookingController::class, 'getBookedSlots'])->name('booking.slots');
 
-    // Wajib login — reservasi
-    Route::middleware('auth')->group(function () {
+    // Khusus pengguna — reservasi (admin & petugas tidak boleh mengajukan reservasi)
+    Route::middleware(['auth', 'role:pengguna'])->group(function () {
         Route::get('/{facility}/reserve', [BookingController::class, 'reserve'])->name('reserve');
         Route::post('/', [BookingController::class, 'store'])->name('store');
         Route::post('/{reservation}/cancel', [BookingController::class, 'cancel'])->name('cancel');
     });
 });
 
-// Laporan kerusakan (pengguna)
-Route::middleware('auth')->group(function () {
+// Laporan kerusakan — khusus pengguna (admin & petugas memproses laporan, tidak membuatnya)
+Route::middleware(['auth', 'role:pengguna'])->group(function () {
     Route::get('/reports', [ReportController::class, 'create'])->name('reports.create');
     Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
     Route::get('/reports/history', [ReportController::class, 'history'])->name('reports.history');

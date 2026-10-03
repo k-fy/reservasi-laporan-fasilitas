@@ -18,41 +18,36 @@ class AuthenticatedSessionController extends Controller
 
     public function store(LoginRequest $request): RedirectResponse
     {
+        // Cek email & password + status akun (pending / rejected / suspended ditolak di LoginRequest)
         $request->authenticate();
         $request->session()->regenerate();
 
         $user = Auth::user();
 
-            $user = Auth::user();
-
-            if (! $user->isActive()) {
-                Auth::guard('web')->logout();
-
-                return back()->withErrors([
-                    'email' => 'Akun kamu sedang ditangguhkan. Silakan hubungi Admin.',
-                ])->onlyInput('email');
-            }
-
-            $request->session()->regenerate();
-
-            if ($user->isAdmin()) {
-                return redirect()->intended(route('admin.dashboard'));
-            }
-
-            if ($user->isPetugas()) {
-                return redirect()->intended(route('dashboard.petugas'));
-            }
-
-            return redirect()->intended(route('dashboard'));
+        // Admin & petugas selalu ke panel masing-masing.
+        // Halaman tujuan yang "diingat" sebelum login (mis. /reports dari tombol Report)
+        // diabaikan, karena halaman pengguna tidak boleh dibuka oleh admin/petugas.
+        if ($user->isAdmin()) {
+            $request->session()->forget('url.intended');
+            return redirect()->route('admin.accounts');
         }
 
-        public function destroy(Request $request): RedirectResponse
-        {
-            Auth::guard('web')->logout();
-
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
-            return redirect('/');
+        if ($user->isPetugas()) {
+            $request->session()->forget('url.intended');
+            return redirect()->route('dashboard.petugas');
         }
+
+        // Pengguna: kembali ke halaman tujuan sebelum login (mis. Report / Booking), atau ke beranda
+        return redirect()->intended(route('dashboard'));
     }
+
+    public function destroy(Request $request): RedirectResponse
+    {
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/');
+    }
+}
