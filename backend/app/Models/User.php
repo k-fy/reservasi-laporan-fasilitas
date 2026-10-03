@@ -19,6 +19,8 @@ class User extends Authenticatable
     // Status akun
     const STATUS_ACTIVE    = 'active';
     const STATUS_SUSPENDED = 'suspended';
+    const STATUS_PENDING   = 'pending_verification';
+    const STATUS_REJECTED  = 'rejected';
 
     // Role
     const ROLE_ADMIN    = 'admin';
@@ -59,6 +61,11 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status === self::STATUS_SUSPENDED;
     }
 
     public function isAdmin(): bool
