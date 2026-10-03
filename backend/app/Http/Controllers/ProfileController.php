@@ -110,21 +110,56 @@ class ProfileController extends Controller
     /**
      * Delete the user's account.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request)
     {
-        $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
-        ]);
+        $request->validate(['password' => 'required']);
 
-        $user = $request->user();
+        $user = Auth::user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Password salah.']);
+        }
 
         Auth::logout();
 
+        // Hapus data terkait dulu sebelum hapus user
+        $user->reservations()->delete();
+        $user->reports()->delete();
         $user->delete();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return Redirect::to('/');
+        return redirect('/')->with('success', 'Successfully deleted your account. All your reservations and reports have been removed.');
+    }
+
+    public function personalization()
+    {
+        return view('profile.personalization', ['user' => Auth::user()]);
+    }
+
+    public function textSettings()
+    {
+        return view('profile.text-settings', ['user' => Auth::user()]);
+    }
+
+    public function tts()
+    {
+        return view('profile.tts', ['user' => Auth::user()]);
+    }
+
+    public function permissions()
+    {
+        return view('profile.permissions', ['user' => Auth::user()]);
+    }
+
+    public function biometrics()
+    {
+        return view('profile.biometrics', ['user' => Auth::user()]);
+    }
+
+    public function deleteAccount()
+    {
+        return view('profile.delete', ['user' => Auth::user()]);
     }
 }

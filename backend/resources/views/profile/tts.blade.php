@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Personalization - Chloe')
+@section('title', 'Text-to-Speech - Chloe')
 @section('content')
 
 <div class="min-h-screen bg-[#FCF1F0] px-8 py-10">
@@ -10,7 +10,7 @@
         <div class="flex-1">
             <div class="bg-white rounded-2xl border border-[#EDD3D6] shadow-sm p-8">
 
-                <h2 class="text-xl font-bold text-[#4b4848] font-['Poppins',sans-serif] mb-1">Personalization</h2>
+                <h2 class="text-xl font-bold text-[#4b4848] font-['Poppins',sans-serif] mb-1">Text-to-Speech</h2>
                 <div class="border-b border-[#EDD3D6] mb-8"></div>
 
                 <div class="flex flex-col items-center justify-center py-16 text-center">
@@ -20,9 +20,9 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
                         </svg>
                     </div>
-                    <h3 class="text-base font-semibold text-[#4b4848] font-['Poppins',sans-serif] mb-2">Personalization</h3>
+                    <h3 class="text-base font-semibold text-[#4b4848] font-['Poppins',sans-serif] mb-2">Text-to-Speech</h3>
                     <p class="text-sm text-[#9b7d84] font-['Poppins',sans-serif] max-w-xs leading-relaxed">
-                        Atur tema, bahasa, dan tampilan aplikasi sesuai preferensimu.
+                        Aktifkan fitur pembacaan teks otomatis untuk aksesibilitas yang lebih baik.
                     </p>
                     <span class="mt-6 inline-block bg-[#FCF1F0] border border-[#EDD3D6] text-[#c9a0a8] text-xs font-semibold px-4 py-2 rounded-full font-['Poppins',sans-serif]">
                         Coming Soon

@@ -43,6 +43,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/users/{user}/toggle-status', [AdminController::class, 'toggleStatus'])->name('users.toggle-status');
     Route::patch('/users/{user}/verify', [AdminController::class, 'verifyUser'])->name('users.verify');
     Route::patch('/users/{user}/reject', [AdminController::class, 'rejectUser'])->name('users.reject');
+    Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
+    Route::get('/accounts', [AdminController::class, 'accounts'])->name('accounts');
 
     // Facilities
     Route::get('/facilities', [AdminController::class, 'facilities'])->name('facilities');
@@ -60,6 +62,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/personalization', [ProfileController::class, 'personalization'])->name('profile.personalization');
+    Route::get('/profile/text-settings', [ProfileController::class, 'textSettings'])->name('profile.text-settings');
+    Route::get('/profile/tts', [ProfileController::class, 'tts'])->name('profile.tts');
+    Route::get('/profile/permissions', [ProfileController::class, 'permissions'])->name('profile.permissions');
+    Route::get('/profile/biometrics', [ProfileController::class, 'biometrics'])->name('profile.biometrics');
+    Route::get('/profile/delete', [ProfileController::class, 'deleteAccount'])->name('profile.delete');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 

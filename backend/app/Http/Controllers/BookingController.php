@@ -242,9 +242,17 @@ class BookingController extends Controller
      * Pengguna membatalkan reservasinya sendiri sebelum batas waktu
      * (paling lambat 24 jam sebelum jadwal dimulai).
      */
-    public function cancel(Reservation $reservation)
+    public function cancel(Request $request, Reservation $reservation)
     {
         abort_unless($reservation->user_id === auth()->id(), 403);
+
+        $data = $request->validate([
+            'cancel_reason' => ['required', 'string', 'min:5', 'max:300'],
+        ], [
+            'cancel_reason.required' => 'Alasan pembatalan wajib diisi.',
+            'cancel_reason.min'      => 'Alasan pembatalan minimal 5 karakter.',
+            'cancel_reason.max'      => 'Alasan pembatalan maksimal 300 karakter.',
+        ]);
 
         if (! in_array($reservation->status, self::CANCELLABLE_STATUSES, true)) {
             return back()->withErrors(['cancel' => 'Reservasi ini sudah tidak bisa dibatalkan.']);
@@ -262,7 +270,7 @@ class BookingController extends Controller
 
         $reservation->update([
             'status'        => 'cancelled',
-            'cancel_reason' => 'Dibatalkan oleh pengguna.',
+            'cancel_reason' => trim($data['cancel_reason']),
         ]);
 
         return back()->with('success', 'Reservasi berhasil dibatalkan.');
