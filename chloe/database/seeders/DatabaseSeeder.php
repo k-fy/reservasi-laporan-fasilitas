@@ -30,18 +30,18 @@ class DatabaseSeeder extends Seeder
 
             // ===== Petugas =====
             ['email' => 'petugas@charm.ac.id',  'name' => 'Petugas Fasilitas',  'role' => 'petugas',  'status' => 'active', 'nim_nip' => '199003152015041002'],
-            ['email' => 'petugas2@charm.ac.id', 'name' => 'Rina Kusuma',        'role' => 'petugas',  'status' => 'active', 'nim_nip' => '199207202018032003'],
+            ['email' => 'petugas2@charm.ac.id', 'name' => 'Revalina Sipangkar',        'role' => 'petugas',  'status' => 'active', 'nim_nip' => '199207202018032003'],
 
             // ===== Pengguna aktif (mahasiswa, dosen, staf) =====
             ['email' => 'user@charm.ac.id',     'name' => 'Pengguna Biasa',     'role' => 'pengguna', 'status' => 'active', 'nim_nip' => '24060124130001'],
-            ['email' => 'mahasiswa@charm.ac.id','name' => 'Dimas Pratama',      'role' => 'pengguna', 'status' => 'active', 'nim_nip' => '24060124130045'],
-            ['email' => 'dosen@charm.ac.id',    'name' => 'Dr. Siti Rahmawati', 'role' => 'pengguna', 'status' => 'active', 'nim_nip' => '198203112008122001'],
-            ['email' => 'staf@charm.ac.id',     'name' => 'Agus Setiawan',      'role' => 'pengguna', 'status' => 'active', 'nim_nip' => '199105052019031004'],
+            ['email' => 'mahasiswa@charm.ac.id','name' => 'Puti Nabilah',      'role' => 'pengguna', 'status' => 'active', 'nim_nip' => '24060124130045'],
+            ['email' => 'dosen@charm.ac.id',    'name' => 'Dr. Sarifa Nuha', 'role' => 'pengguna', 'status' => 'active', 'nim_nip' => '198203112008122001'],
+            ['email' => 'staf@charm.ac.id',     'name' => 'Pepeka',      'role' => 'pengguna', 'status' => 'active', 'nim_nip' => '199105052019031004'],
 
             // ===== Untuk demo fitur admin =====
             // Menunggu verifikasi (registrasi mandiri)
-            ['email' => 'pending1@charm.ac.id', 'name' => 'Nadia Putri',        'role' => 'pengguna', 'status' => $pending, 'nim_nip' => '24060124130088'],
-            ['email' => 'pending2@charm.ac.id', 'name' => 'Bagas Wicaksono',    'role' => 'pengguna', 'status' => $pending, 'nim_nip' => '24060124130092'],
+            ['email' => 'pending1@charm.ac.id', 'name' => 'Silvani Pending',        'role' => 'pengguna', 'status' => $pending, 'nim_nip' => '24060124130088'],
+            ['email' => 'pending2@charm.ac.id', 'name' => 'Xixi',    'role' => 'pengguna', 'status' => $pending, 'nim_nip' => '24060124130092'],
             // Akun ditangguhkan
             ['email' => 'suspended@charm.ac.id','name' => 'Akun Ditangguhkan',  'role' => 'pengguna', 'status' => User::STATUS_SUSPENDED, 'nim_nip' => '24060124130099'],
         ];

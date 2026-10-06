@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Facility;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class FacilitySeeder extends Seeder
 {
@@ -188,7 +190,39 @@ class FacilitySeeder extends Seeder
             ],
         ];
 
+        /*
+         * Foto fasilitas: simpan file di database/seeders/images/facilities/
+         * dengan nama sesuai daftar di bawah. Saat seeder dijalankan, foto disalin ke
+         * storage/app/public/facilities dan dipasang ke fasilitasnya.
+         * Jika file tidak ditemukan, fasilitas tetap dibuat tanpa foto.
+         */
+        $photos = [
+            'Aula Utama "Beau"'             => 'aula-utama.jpg',
+            'Auditorium Prof. Dr. Satrio'   => 'auditorium.jpg',
+            'Ruang Teater Gedung B'         => 'ruang-teater.jpg',
+            'Ruang Sidang Lt. 3'            => 'ruang-sidang.jpg',
+            'Ruang Kelas 201'               => 'ruang-kelas-201.jpg',
+            'Ruang Kelas 304'               => 'ruang-kelas-304.jpg',
+            'Ruang Diskusi Perpustakaan'    => 'ruang-diskusi.jpg',
+            'Lab Komputer 1 (Gedung A)'     => 'lab-komputer.jpg',
+            'Lab Jaringan & Keamanan Siber' => 'lab-jaringan.jpg',
+            'Lab Multimedia & Desain'       => 'lab-multimedia.jpg',
+            'Lapangan Outdoor Utama'        => 'lapangan-outdoor.jpg',
+            'Lapangan Basket Indoor'        => 'lapangan-basket.jpg',
+            'Proyektor Portable Epson'      => 'proyektor.jpg',
+            'Set Sound Portable Wireless'   => 'sound-system.jpg',
+            'Kamera DSLR Profesional'       => 'kamera-dslr.jpg',
+        ];
+        $photoDir = database_path('seeders/images/facilities');
+
         foreach ($facilities as $facility) {
+            // Pasang foto jika file-nya tersedia
+            $file = $photos[$facility['name']] ?? null;
+            if ($file && File::exists("{$photoDir}/{$file}")) {
+                Storage::disk('public')->put("facilities/{$file}", File::get("{$photoDir}/{$file}"));
+                $facility['image'] = "facilities/{$file}";
+            }
+
             // updateOrCreate (berdasarkan nama) agar aman dijalankan berulang
             // tanpa menghapus data reservasi/laporan yang terhubung
             Facility::updateOrCreate(
