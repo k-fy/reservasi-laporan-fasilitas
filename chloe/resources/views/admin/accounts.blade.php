@@ -13,6 +13,7 @@
 
     @php
         use App\Models\User;
+        use App\Support\FormRules;
 
         $roleLabels = [
             User::ROLE_ADMIN    => 'Admin',
@@ -127,7 +128,6 @@
                                         <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Name</th>
                                         <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Campus email</th>
                                         <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Role</th>
-                                        <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Unit</th>
                                         <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Status</th>
                                         <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider">Last active</th>
                                         <th class="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider text-right">Action</th>
@@ -177,9 +177,6 @@
                                                     </form>
                                                 @endif
                                             </td>
-
-                                            <!-- 4. Unit -->
-                                            <td class="px-5 py-4 text-gray-600">{{ $user->unit ?? '-' }}</td>
 
                                             <!-- 5. Status -->
                                             <td class="px-5 py-4">
@@ -247,7 +244,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="px-5 py-12 text-center text-gray-400">
+                                            <td colspan="6" class="px-5 py-12 text-center text-gray-400">
                                                 <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M9 20H4v-2a3 3 0 015.356-1.857M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                                 No users found.
                                             </td>
@@ -262,7 +259,7 @@
                     <!-- TAB 2: ADD ACCOUNTS -->
                     <div id="content-add" class="tab-content hidden">
                         <h2 class="font-bold text-lg text-[#3b2b2c]">Add officer, admin, or user account</h2>
-                        <p class="text-sm text-gray-500 mt-1 mb-7">Create account credentials. The account is active immediately and can be used to log in.</p>
+                        <p class="text-sm text-gray-500 mt-1 mb-7">Create account credentials. The account is active immediately and can be used to log in. Use a campus email ending in {{ FormRules::EMAIL_DOMAIN }}.</p>
 
                         <form class="space-y-5 max-w-3xl" action="{{ route('admin.users.store') }}" method="POST">
                             @csrf
@@ -270,12 +267,16 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
                                     <label class="block text-sm font-semibold mb-1.5 text-gray-700">Full name</label>
-                                    <input type="text" name="name" value="{{ old('name') }}" required placeholder="e.g. Bagus Tri Prakoso"
+                                    <input type="text" name="name" value="{{ old('name') }}" required maxlength="100" placeholder="e.g. Bagus Tri Prakoso"
+                                           pattern="{{ FormRules::NAME_PATTERN }}" title="Hanya huruf, spasi, titik, atau tanda hubung"
                                            class="w-full bg-[#f8f4f4] border border-transparent rounded-xl px-4 py-3 text-sm text-gray-700 focus:bg-white focus:border-[#e2b8bc] focus:ring-2 focus:ring-[#e2b8bc]/50 focus:outline-none transition">
                                 </div>
                                 <div>
-                                    <label class="block text-sm font-semibold mb-1.5 text-gray-700">Student ID / Employee ID</label>
-                                    <input type="text" name="nim_nip" value="{{ old('nim_nip') }}" placeholder="19870412 201004 1 002"
+                                    <label class="block text-sm font-semibold mb-1.5 text-gray-700">Student ID / Employee ID (NIM/NIP)</label>
+                                    <input type="text" name="nim_nip" value="{{ old('nim_nip') }}" required inputmode="numeric" maxlength="18"
+                                           pattern="{{ FormRules::NIM_NIP_PATTERN }}" title="NIM 14 digit atau NIP 18 digit, hanya angka"
+                                           oninput="this.value = this.value.replace(/\D/g, '')"
+                                           placeholder="14 digit (NIM) atau 18 digit (NIP)"
                                            class="w-full bg-[#f8f4f4] border border-transparent rounded-xl px-4 py-3 text-sm text-gray-700 focus:bg-white focus:border-[#e2b8bc] focus:ring-2 focus:ring-[#e2b8bc]/50 focus:outline-none transition">
                                 </div>
                             </div>
@@ -283,7 +284,9 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div>
                                     <label class="block text-sm font-semibold mb-1.5 text-gray-700">Campus email</label>
-                                    <input type="email" name="email" value="{{ old('email') }}" required placeholder="name@charm.ac.id"
+                                    <input type="email" name="email" value="{{ old('email') }}" required maxlength="255" placeholder="name@charm.ac.id"
+                                           pattern="[^@\s]+@charm\.ac\.id" title="Gunakan email institusi berakhiran {{ FormRules::EMAIL_DOMAIN }}"
+                                           oninput="this.value = this.value.toLowerCase()"
                                            class="w-full bg-[#f8f4f4] border border-transparent rounded-xl px-4 py-3 text-sm text-gray-700 focus:bg-white focus:border-[#e2b8bc] focus:ring-2 focus:ring-[#e2b8bc]/50 focus:outline-none transition">
                                 </div>
                                 <div>
@@ -307,18 +310,7 @@
                                 </div>
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <!-- Placement Unit -->
-                                <div>
-                                    <label class="block text-sm font-semibold mb-1.5 text-gray-700">Placement unit</label>
-                                    <select name="unit" class="w-full bg-[#f8f4f4] border border-transparent rounded-xl px-4 py-3 text-sm text-gray-700 focus:bg-white focus:border-[#e2b8bc] focus:ring-2 focus:ring-[#e2b8bc]/50 focus:outline-none cursor-pointer">
-                                        <option value="Gedung Rektorat">Gedung Rektorat</option>
-                                        <option value="BAUK">BAUK</option>
-                                        <option value="Gedung A">Gedung A</option>
-                                        <option value="Gedung C">Gedung C</option>
-                                    </select>
-                                </div>
-
+                            <div class="md:w-1/2 md:pr-2.5">
                                 <!-- Account Role -->
                                 <div>
                                     <label class="block text-sm font-semibold mb-1.5 text-gray-700">Role</label>
@@ -380,7 +372,7 @@
         }
 
         // Kalau ada error validasi dari form tambah akun, langsung buka tab "Add Account"
-        @if($errors->hasAny(['name', 'email', 'password', 'nim_nip', 'unit', 'role']))
+        @if($errors->hasAny(['name', 'email', 'password', 'nim_nip', 'role']))
             switchTab('add');
         @endif
     </script>

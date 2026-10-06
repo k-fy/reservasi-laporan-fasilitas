@@ -116,8 +116,6 @@ class OperatorController extends Controller
     }
 
     /* ---------------- Reports ---------------- */
-    // Semua status laporan diambil dari konstanta di App\Models\Report,
-    // supaya tidak ada lagi beda 'baru' vs 'New' antara model dan controller.
 
     public function reports(Request $request)
     {
@@ -217,13 +215,19 @@ class OperatorController extends Controller
     public function setFacilityStatus(Request $request, Facility $facility)
     {
         $validated = $request->validate([
-            'status' => 'required|in:active,maintenance,inactive',
+            'status' => 'required|in:active,maintenance',
+        ], [
+            'status.in' => 'Petugas hanya dapat mengubah status menjadi Active atau Under repair.',
         ]);
+
+        if ($facility->status === 'inactive') {
+            return back()->with('error', $facility->name . ' sedang dinonaktifkan oleh admin dan tidak dapat diubah oleh petugas.');
+        }
 
         $facility->update(['status' => $validated['status']]);
 
-        $labels = ['active' => 'Active', 'maintenance' => 'Under repair', 'inactive' => 'Inactive'];
+        $labels = ['active' => 'Active', 'maintenance' => 'Under repair'];
 
-        return back()->with('success', $facility->name.' set to '.$labels[$validated['status']].'.');
+        return back()->with('success', $facility->name . ' set to ' . $labels[$validated['status']] . '.');
     }
 }

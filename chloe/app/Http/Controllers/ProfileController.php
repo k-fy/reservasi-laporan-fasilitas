@@ -6,6 +6,7 @@ use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Report;
 use App\Models\Reservation;
 use App\Models\User;
+use App\Support\FormRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -98,17 +99,27 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
 
+        // Rapikan input sebelum divalidasi (email huruf kecil, hapus spasi di NIM/NIP)
+        $request->merge([
+            'email'   => strtolower(trim((string) $request->email)),
+            'nim_nip' => preg_replace('/\s+/', '', (string) $request->nim_nip),
+        ]);
+
         $request->validate([
-            'name'    => 'required|string|max:255',
-            'nim_nip' => 'nullable|string|max:50',
+            'name'    => FormRules::name(),
+            'nim_nip' => array_merge(FormRules::nimNip(false), ['unique:users,nim_nip,' . $user->id]),
             'bio'     => 'nullable|string|max:500',
             'photo'   => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-            'email'   => 'required|email|unique:users,email,' . $user->id,
+            'email'   => FormRules::campusEmail($user->id),
+        ], FormRules::messages() + [
+            'nim_nip.unique' => 'NIM/NIP ini sudah dipakai akun lain.',
+            'photo.max'      => 'Ukuran foto maksimal 2 MB.',
+            'photo.mimes'    => 'Foto harus berformat JPG atau PNG.',
         ]);
 
         $data = [
-            'name'    => $request->name,
-            'nim_nip' => $request->nim_nip,
+            'name'    => trim($request->name),
+            'nim_nip' => $request->nim_nip ?: null,
             'bio'     => $request->bio,
             'email'   => $request->email,
         ];
@@ -124,6 +135,9 @@ class ProfileController extends Controller
             $request->validate([
                 'password'              => 'min:8',
                 'password_confirmation' => 'required|same:password',
+            ], [
+                'password.min'               => 'Password baru minimal 8 karakter.',
+                'password_confirmation.same' => 'Konfirmasi password tidak sama.',
             ]);
             $data['password'] = Hash::make($request->password);
         }

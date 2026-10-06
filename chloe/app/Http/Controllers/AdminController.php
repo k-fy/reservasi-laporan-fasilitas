@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use App\Support\FormRules;
 
 class AdminController extends Controller
 {
@@ -57,7 +58,7 @@ class AdminController extends Controller
             'area'           => 'nullable|string|max:100',
             'description'    => 'nullable|string|max:2000',
             'amenities'      => 'nullable|string|max:1000',
-            'contact_phone'  => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
+            'contact_phone'  => FormRules::phone(false),
             'status'         => ['required', Rule::in(self::FACILITY_STATUSES)],
             'image'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ];
@@ -69,7 +70,7 @@ class AdminController extends Controller
     private function facilityMessages(): array
     {
         return [
-            'contact_phone.regex' => 'Nomor kontak hanya boleh berisi angka, spasi, tanda + atau -.',
+            'contact_phone.regex' => 'Nomor kontak harus diawali 08 dan terdiri dari 10–13 digit angka.',
             'image.image'         => 'File foto harus berupa gambar.',
             'image.max'           => 'Ukuran foto maksimal 2 MB.',
         ];
@@ -233,26 +234,36 @@ class AdminController extends Controller
     }
 
     /**
-     * Tambah Akun Baru oleh Admin
+     * Tambah Akun Baru oleh Admin (akun langsung aktif)
      */
     public function storeUser(Request $request)
     {
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
+        // Rapikan input sebelum divalidasi (email huruf kecil, hapus spasi di NIM/NIP)
+        $request->merge([
+            'email'   => strtolower(trim((string) $request->email)),
+            'nim_nip' => preg_replace('/\s+/', '', (string) $request->nim_nip),
+        ]);
+
+        $validated = $request->validate([
+            'name'     => FormRules::name(),
+            'nim_nip'  => array_merge(FormRules::nimNip(), ['unique:users,nim_nip']),
+            'email'    => FormRules::campusEmail(),
             'password' => 'required|string|min:8',
-            'role'     => 'required|string|in:petugas,pengguna,Petugas,Pengguna',
+            'role'     => ['required', Rule::in(self::ROLES)],
+        ], FormRules::messages() + [
+            'nim_nip.unique' => 'NIM/NIP ini sudah terdaftar.',
         ]);
 
         User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-            'role'     => strtolower($request->role), // Mengubah ke huruf kecil konsisten
-            'status'   => 'active',
+            'name'     => trim($validated['name']),
+            'nim_nip'  => $validated['nim_nip'],
+            'email'    => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role'     => $validated['role'],
+            'status'   => User::STATUS_ACTIVE,
         ]);
 
-        return back()->with('success', 'Akun berhasil dibuat!');
+        return back()->with('success', 'Akun ' . $validated['name'] . ' berhasil dibuat dan langsung aktif.');
     }
 
     /**

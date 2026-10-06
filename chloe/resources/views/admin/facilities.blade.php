@@ -334,10 +334,12 @@
 
                             <div>
                                 <label class="block font-semibold mb-1.5 text-gray-700">Nomor Kontak Pengelola</label>
-                                <input type="tel" name="contact_phone" x-model="form.contact_phone" maxlength="20" pattern="[0-9+\-\s]+" placeholder="0812-1001-1002"
-                                       title="Hanya angka, spasi, tanda + atau -"
+                                <input type="tel" name="contact_phone" x-model="form.contact_phone" inputmode="numeric" maxlength="13"
+                                       pattern="08[0-9]{8,11}" placeholder="081210011002"
+                                       title="Diawali 08, 10–13 digit angka"
+                                       @input="form.contact_phone = $event.target.value.replace(/\D/g, '')"
                                        class="w-full sm:w-1/2 bg-[#f8f4f4] border border-transparent rounded-xl px-4 py-3 text-sm text-gray-700 focus:bg-white focus:border-[#e2b8bc] focus:ring-2 focus:ring-[#e2b8bc]/50 focus:outline-none transition">
-                                <p class="text-xs text-gray-400 mt-1">Peminjaman fasilitas tidak dipungut biaya.</p>
+                                <p class="text-xs text-gray-400 mt-1">Diawali 08, 10–13 digit angka. Peminjaman fasilitas tidak dipungut biaya.</p>
                             </div>
                         </section>
 
