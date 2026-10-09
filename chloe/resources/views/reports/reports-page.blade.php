@@ -124,65 +124,204 @@
 
                 {{-- Category --}}
                 <div class="report-field mb-5">
-                    <label for="category" class="block font-semibold text-neutral-700 mb-1">
+                    <label class="block font-semibold text-neutral-700 mb-1">
                         Category<span class="text-rose-400">*</span>
                     </label>
-                    <select name="category" id="category" x-model="category" required
-                        class="report-input w-full rounded-xl border border-neutral-400 bg-rose-50 px-4 py-2.5
-                               text-neutral-700 focus:outline-none">
-                        <option value="" disabled>Pilih kategori</option>
-                        <option value="lokasi">Lokasi</option>
-                        <option value="peralatan">Peralatan</option>
-                    </select>
+                    <div x-data="{ 
+                            open: false, 
+                            selectedValue: '{{ old('category', '') }}', 
+                            selectedLabel: '{{ old('category') ? (old('category') == 'lokasi' ? 'Lokasi' : 'Peralatan') : 'Pilih kategori' }}',
+                            options: [
+                                { label: 'Lokasi', value: 'lokasi' },
+                                { label: 'Peralatan', value: 'peralatan' }
+                            ]
+                        }" 
+                        class="relative w-full font-sans" 
+                        @click.outside="open = false">
+                        
+                        <input type="hidden" name="category" x-model="selectedValue" required>
+
+                        <button 
+                            @click="open = !open" 
+                            type="button" 
+                            class="report-input w-full bg-rose-50 text-neutral-700 border border-neutral-400 rounded-xl px-4 py-2.5 flex justify-between items-center focus:outline-none shadow-sm">
+                            <span x-text="selectedLabel" :class="selectedValue ? 'text-neutral-700' : 'text-neutral-400'"></span>
+                            <svg class="w-4 h-4 text-neutral-500 transition-transform duration-200" 
+                                :class="open ? 'rotate-180' : ''" 
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <div 
+                            x-show="open" 
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute z-50 w-full mt-2 bg-white border border-neutral-300 rounded-xl shadow-lg overflow-hidden"
+                            style="display: none;">
+                            
+                            <ul class="py-1">
+                                <template x-for="option in options" :key="option.value">
+                                    <li 
+                                        @click="
+                                            selectedValue = option.value; 
+                                            selectedLabel = option.label;
+                                            category = option.value;
+                                            open = false;
+                                        "
+                                        class="px-4 py-2.5 cursor-pointer text-sm transition-colors"
+                                        :class="selectedValue === option.value 
+                                            ? 'bg-rose-100 text-rose-700 font-bold' 
+                                            : 'text-neutral-700 hover:bg-rose-50 hover:text-rose-600'">
+                                        <span x-text="option.label"></span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
                     @error('category')
                         <p class="text-sm text-red-500 mt-1">{{ $message }}</p>
                     @enderror
                 </div>
 
-                {{-- Location (muncul kalau category = lokasi) --}}
+                {{-- Location --}}
                 <div class="report-field mb-5" x-show="category === 'lokasi'" x-cloak
                      x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0 -translate-y-2"
                      x-transition:enter-end="opacity-100 translate-y-0">
-                    <label for="facility_location" class="block font-semibold text-neutral-700 mb-1">
+                    <label class="block font-semibold text-neutral-700 mb-1">
                         Location<span class="text-rose-400">*</span>
                     </label>
-                    <select name="facility_id" id="facility_location"
-                        :disabled="category !== 'lokasi'"
-                        :required="category === 'lokasi'"
-                        class="report-input w-full rounded-xl border border-neutral-400 bg-rose-50 px-4 py-2.5
-                               text-neutral-700 focus:outline-none">
-                        <option value="" disabled selected>Pilih lokasi</option>
-                        @foreach ($locations as $facility)
-                            <option value="{{ $facility->id }}"
-                                {{ old('facility_id') == $facility->id ? 'selected' : '' }}>
-                                {{ $facility->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div x-data="{ 
+                            open: false, 
+                            selectedValue: '{{ old('facility_id') }}', 
+                            selectedLabel: 'Pilih lokasi',
+                            init() {
+                                @foreach ($locations as $facility)
+                                    if (this.selectedValue == '{{ $facility->id }}') {
+                                        this.selectedLabel = '{{ addslashes($facility->name) }}';
+                                    }
+                                @endforeach
+                            }
+                        }" 
+                        class="relative w-full font-sans" 
+                        @click.outside="open = false">
+                        
+                        <input type="hidden" name="facility_id" x-model="selectedValue" :disabled="category !== 'lokasi'" :required="category === 'lokasi'">
+
+                        <button 
+                            @click="open = !open" 
+                            type="button" 
+                            class="report-input w-full bg-rose-50 text-neutral-700 border border-neutral-400 rounded-xl px-4 py-2.5 flex justify-between items-center focus:outline-none shadow-sm">
+                            <span x-text="selectedLabel" :class="selectedValue ? 'text-neutral-700' : 'text-neutral-400'"></span>
+                            <svg class="w-4 h-4 text-neutral-500 transition-transform duration-200" 
+                                :class="open ? 'rotate-180' : ''" 
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <div 
+                            x-show="open" 
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute z-50 w-full mt-2 bg-white border border-neutral-300 rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto"
+                            style="display: none;">
+                            
+                            <ul class="py-1">
+                                @foreach ($locations as $facility)
+                                    <li 
+                                        @click="
+                                            selectedValue = '{{ $facility->id }}'; 
+                                            selectedLabel = '{{ addslashes($facility->name) }}';
+                                            open = false;
+                                        "
+                                        class="px-4 py-2.5 cursor-pointer text-sm transition-colors"
+                                        :class="selectedValue == '{{ $facility->id }}' 
+                                            ? 'bg-rose-100 text-rose-700 font-bold' 
+                                            : 'text-neutral-700 hover:bg-rose-50 hover:text-rose-600'">
+                                        {{ $facility->name }}
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
-                {{-- Equipment (muncul kalau category = peralatan) --}}
+                {{-- Equipment --}}
                 <div class="report-field mb-5" x-show="category === 'peralatan'" x-cloak
                      x-transition:enter="transition ease-out duration-300"
                      x-transition:enter-start="opacity-0 -translate-y-2"
                      x-transition:enter-end="opacity-100 translate-y-0">
-                    <label for="facility_equipment" class="block font-semibold text-neutral-700 mb-1">
+                    <label class="block font-semibold text-neutral-700 mb-1">
                         Equipment<span class="text-rose-400">*</span>
                     </label>
-                    <select name="facility_id" id="facility_equipment"
-                        :disabled="category !== 'peralatan'"
-                        :required="category === 'peralatan'"
-                        class="report-input w-full rounded-xl border border-neutral-400 bg-rose-50 px-4 py-2.5
-                               text-neutral-700 focus:outline-none">
-                        <option value="" disabled selected>Pilih peralatan</option>
-                        @foreach ($equipments as $facility)
-                            <option value="{{ $facility->id }}"
-                                {{ old('facility_id') == $facility->id ? 'selected' : '' }}>
-                                {{ $facility->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div x-data="{ 
+                            open: false, 
+                            selectedValue: '{{ old('facility_id') }}', 
+                            selectedLabel: 'Pilih peralatan',
+                            init() {
+                                @foreach ($equipments as $facility)
+                                    if (this.selectedValue == '{{ $facility->id }}') {
+                                        this.selectedLabel = '{{ addslashes($facility->name) }}';
+                                    }
+                                @endforeach
+                            }
+                        }" 
+                        class="relative w-full font-sans" 
+                        @click.outside="open = false">
+                        
+                        <input type="hidden" name="facility_id" x-model="selectedValue" :disabled="category !== 'peralatan'" :required="category === 'peralatan'">
+
+                        <button 
+                            @click="open = !open" 
+                            type="button" 
+                            class="report-input w-full bg-rose-50 text-neutral-700 border border-neutral-400 rounded-xl px-4 py-2.5 flex justify-between items-center focus:outline-none shadow-sm">
+                            <span x-text="selectedLabel" :class="selectedValue ? 'text-neutral-700' : 'text-neutral-400'"></span>
+                            <svg class="w-4 h-4 text-neutral-500 transition-transform duration-200" 
+                                :class="open ? 'rotate-180' : ''" 
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <div 
+                            x-show="open" 
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute z-50 w-full mt-2 bg-white border border-neutral-300 rounded-xl shadow-lg overflow-hidden max-h-60 overflow-y-auto"
+                            style="display: none;">
+                            
+                            <ul class="py-1">
+                                @foreach ($equipments as $facility)
+                                    <li 
+                                        @click="
+                                            selectedValue = '{{ $facility->id }}'; 
+                                            selectedLabel = '{{ addslashes($facility->name) }}';
+                                            open = false;
+                                        "
+                                        class="px-4 py-2.5 cursor-pointer text-sm transition-colors"
+                                        :class="selectedValue == '{{ $facility->id }}' 
+                                            ? 'bg-rose-100 text-rose-700 font-bold' 
+                                            : 'text-neutral-700 hover:bg-rose-50 hover:text-rose-600'">
+                                        {{ $facility->name }}
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 @error('facility_id')

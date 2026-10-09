@@ -116,33 +116,159 @@
                    onclick="this.showPicker && this.showPicker()"
                    class="w-full h-[38px] border-2 border-white rounded-xl bg-transparent text-[#FFF5F5] px-2 text-sm cursor-pointer font-['Poppins',sans-serif] focus:outline-none focus:ring-2 focus:ring-[#f3d8d5] [color-scheme:dark]">
 
-            <div class="flex gap-3 mt-1">
+            <div class="flex gap-3 mt-1" x-data="{ globalStartTime: '' }">
                 <!-- Start Time -->
-                <div class="flex-1 flex flex-col">
-                    <label for="start_time" class="text-[13px] text-[#FFF5F5] mt-2 mb-1">Start Time <span class="text-[#f3d8d5]">*</span></label>
-                    <select name="start_time" id="start_time" required
-                            class="w-full h-[38px] border-2 border-[#FFF5F5] rounded-xl bg-[#4b4848] text-[#FFF5F5] px-2 text-sm font-['Poppins',sans-serif] focus:outline-none focus:ring-2 focus:ring-[#f3d8d5]">
-                        <option value="" disabled selected>--:--</option>
+                <div class="flex-1 flex flex-col" x-data="{ 
+                        open: false, 
+                        selectedValue: '{{ old('start_time') }}', 
+                        selectedLabel: '{{ old('start_time') ?: '--:--' }}',
+                        options: [
+                            @foreach($timeOptions as $time)
+                                @if($time !== '20:00')
+                                    { label: '{{ $time }}', value: '{{ $time }}' },
+                                @endif
+                            @endforeach
+                        ]
+                    }" 
+                    class="relative w-full font-sans" 
+                    @click.outside="open = false">
+                    
+                    <label class="text-[13px] text-[#FFF5F5] mt-2 mb-1">Start Time <span class="text-[#f3d8d5]">*</span></label>
+                    
+                    <select name="start_time" id="start_time" x-model="selectedValue" required class="hidden">
+                        <option value="">--:--</option>
                         @foreach($timeOptions as $time)
                             @if($time !== '20:00')
                                 <option value="{{ $time }}">{{ $time }}</option>
                             @endif
                         @endforeach
                     </select>
+
+                    <div class="relative">
+                        <button 
+                            @click="open = !open" 
+                            type="button" 
+                            class="w-full h-[38px] bg-[#4b4848] text-[#FFF5F5] border-2 border-[#FFF5F5] rounded-xl px-3 text-sm flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-[#f3d8d5] transition-all">
+                            <span x-text="selectedLabel"></span>
+                            <svg class="w-4 h-4 text-[#FFF5F5] transition-transform duration-200" 
+                                :class="open ? 'rotate-180' : ''" 
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <div 
+                            x-show="open" 
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute z-50 w-full mt-2 bg-white border border-[#f3d8d5] rounded-xl shadow-xl overflow-hidden"
+                            style="display: none;">
+                            
+                            <ul class="py-1 max-h-48 overflow-y-auto">
+                                <template x-for="option in options" :key="option.value">
+                                    <li 
+                                        @click="
+                                            selectedValue = option.value; 
+                                            selectedLabel = option.label;
+                                            open = false;
+                                            // Kirim data ke parent scope agar End Time langsung merespons
+                                            globalStartTime = option.value;
+                                            
+                                            let endTimeInput = document.getElementById('end_time');
+                                            if (endTimeInput.value && option.value >= endTimeInput.value) {
+                                                window.dispatchEvent(new CustomEvent('reset-end-time'));
+                                            }
+                                        "
+                                        class="px-4 py-2 cursor-pointer text-sm transition-colors"
+                                        :class="selectedValue === option.value 
+                                            ? 'bg-[#FCF1F0] text-[#814C5B] font-bold' 
+                                            : 'text-[#4b4848] hover:bg-[#FDF8F8] hover:text-[#814C5B]'">
+                                        <span x-text="option.label"></span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- End Time -->
-                <div class="flex-1 flex flex-col">
-                    <label for="end_time" class="text-[13px] text-[#FFF5F5] mt-2 mb-1">End Time <span class="text-[#f3d8d5]">*</span></label>
-                    <select name="end_time" id="end_time" required
-                            class="w-full h-[38px] border-2 border-[#FFF5F5] rounded-xl bg-[#4b4848] text-[#FFF5F5] px-2 text-sm font-['Poppins',sans-serif] focus:outline-none focus:ring-2 focus:ring-[#f3d8d5]">
-                        <option value="" disabled selected>--:--</option>
+                <div class="flex-1 flex flex-col" x-data="{ 
+                        open: false, 
+                        selectedValue: '{{ old('end_time') }}', 
+                        selectedLabel: '{{ old('end_time') ?: '--:--' }}',
+                        options: [
+                            @foreach($timeOptions as $time)
+                                @if($time !== '07:00')
+                                    { label: '{{ $time }}', value: '{{ $time }}' },
+                                @endif
+                            @endforeach
+                        ]
+                    }" 
+                    @reset-end-time.window="selectedValue = ''; selectedLabel = '--:--'"
+                    class="relative w-full font-sans" 
+                    @click.outside="open = false">
+                    
+                    <label class="text-[13px] text-[#FFF5F5] mt-2 mb-1">End Time <span class="text-[#f3d8d5]">*</span></label>
+                    
+                    <select name="end_time" id="end_time" x-model="selectedValue" required class="hidden">
+                        <option value="">--:--</option>
                         @foreach($timeOptions as $time)
                             @if($time !== '07:00')
                                 <option value="{{ $time }}">{{ $time }}</option>
                             @endif
                         @endforeach
                     </select>
+
+                    <div class="relative">
+                        <button 
+                            @click="open = !open" 
+                            type="button" 
+                            class="w-full h-[38px] bg-[#4b4848] text-[#FFF5F5] border-2 border-[#FFF5F5] rounded-xl px-3 text-sm flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-[#f3d8d5] transition-all">
+                            <span x-text="selectedLabel"></span>
+                            <svg class="w-4 h-4 text-[#FFF5F5] transition-transform duration-200" 
+                                :class="open ? 'rotate-180' : ''" 
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <div 
+                            x-show="open" 
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute z-50 w-full mt-2 bg-white border border-[#f3d8d5] rounded-xl shadow-xl overflow-hidden"
+                            style="display: none;">
+                            
+                            <ul class="py-1 max-h-48 overflow-y-auto">
+                                <template x-for="option in options" :key="option.value">
+                                    <li 
+                                        @click="
+                                            if (!globalStartTime || option.value > globalStartTime) {
+                                                selectedValue = option.value; 
+                                                selectedLabel = option.label;
+                                                open = false;
+                                            }
+                                        "
+                                        class="px-4 py-2 text-sm transition-colors"
+                                        :class="{
+                                            'bg-[#FCF1F0] text-[#814C5B] font-bold': selectedValue === option.value,
+                                            'opacity-40 cursor-not-allowed text-gray-400 bg-gray-50 select-none': globalStartTime && option.value <= globalStartTime,
+                                            'cursor-pointer text-[#4b4848] hover:bg-[#FDF8F8] hover:text-[#814C5B]': !globalStartTime || option.value > globalStartTime
+                                        }">
+                                        <span x-text="option.label"></span>
+                                    </li>
+                                </template>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
 
