@@ -44,10 +44,10 @@ class ReservationSeeder extends Seeder
             ],
             [
                 'user'     => 'staf@charm.ac.id',
-                'facility' => 'Proyektor Portable Epson',
+                'facility' => 'Scanning Electron Microscope (SEM)',
                 'date'     => $today->copy()->addDays(4),
                 'start'    => '08:00', 'end' => '10:00',
-                'purpose'  => 'Presentasi rapat koordinasi bagian akademik.',
+                'purpose'  => 'Analisis struktur mikro sampel sel untuk publikasi jurnal.',
                 'status'   => 'approved',
                 'processed_by' => $petugas,
                 'created'  => $today->copy()->subDays(2),
@@ -109,15 +109,14 @@ class ReservationSeeder extends Seeder
             ],
             [
                 'user'     => 'user@charm.ac.id',
-                'facility' => 'Set Sound Portable Wireless',
+                'facility' => 'Flow Cytometer (FACS Cell Sorter)',
                 'date'     => $today->copy()->addDays(6),
                 'start'    => '16:00', 'end' => '19:00',
-                'purpose'  => 'Acara malam keakraban UKM Musik.',
+                'purpose'  => 'Pemisahan sel target untuk penelitian imunologi.',
                 'status'   => 'pending',
                 'processed_by' => null,
                 'created'  => $today->copy(),
             ],
-
             // ================= REJECTED =================
             [
                 'user'     => 'mahasiswa@charm.ac.id',
@@ -145,14 +144,14 @@ class ReservationSeeder extends Seeder
                 'created'  => $today->copy()->subDays(6),
             ],
             [
-                // Dibatalkan sendiri oleh pengguna
+            // Dibatalkan sendiri oleh pengguna
                 'user'     => 'user@charm.ac.id',
-                'facility' => 'Kamera DSLR Profesional',
+                'facility' => 'Cutera Excel V Laser System',
                 'date'     => $today->copy()->addDays(5),
                 'start'    => '10:00', 'end' => '12:00',
-                'purpose'  => 'Dokumentasi kegiatan bakti sosial.',
+                'purpose'  => 'Praktikum klinis perawatan lesi vaskular.',
                 'status'   => 'cancelled',
-                'cancel_reason' => 'Kegiatan diundur oleh panitia.',
+                'cancel_reason' => 'Kegiatan diundur oleh dosen pengampu.',
                 'processed_by' => null,
                 'created'  => $today->copy()->subDays(3),
             ],
